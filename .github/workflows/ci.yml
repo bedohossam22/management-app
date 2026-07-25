@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            path: backend
+            script: build
+          - name: frontend
+            path: frontend
+            script: build
+    name: Build (${{ matrix.name }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if package.json exists
+        id: check_pkg
+        run: |
+          if [ -f "${{ matrix.path }}/package.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No package.json found in ${{ matrix.path }}, skipping build job."
+          fi
+
+      - name: Setup Node
+        if: steps.check_pkg.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.path }}/package-lock.json
+
+      - name: Install
+        if: steps.check_pkg.outputs.exists == 'true'
+        run: npm ci
+        working-directory: ${{ matrix.path }}
+
+      - name: Build
+        if: steps.check_pkg.outputs.exists == 'true'
+        run: npm run ${{ matrix.script }}
+        working-directory: ${{ matrix.path }}
