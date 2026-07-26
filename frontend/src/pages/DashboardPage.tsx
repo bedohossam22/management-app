@@ -23,7 +23,6 @@ const DashboardPage: React.FC = () => {
     const fetchTasks = useCallback(async () => {
         try {
             setLoading(true);
-            setError(null);
             const response = await api.get('/tasks');
             const data = response.data.data || response.data;
             setTasks(Array.isArray(data) ? data : []);
