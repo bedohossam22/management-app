@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import Navbar from '../components/common/Navbar';
 import TaskList from '../components/tasks/TaskList';
 import TaskFilters from '../components/tasks/TaskFilters';
@@ -28,7 +29,9 @@ const DashboardPage: React.FC = () => {
             const data = response.data.data || response.data;
             setTasks(Array.isArray(data) ? data : []);
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to fetch tasks');
+            const message = err.response?.data?.message || 'Failed to fetch tasks';
+            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -42,14 +45,16 @@ const DashboardPage: React.FC = () => {
         try {
             if (editingTask) {
                 await api.put(`/tasks/${editingTask._id}`, formData);
+                toast.success('Task updated successfully!');
             } else {
                 await api.post('/tasks', formData);
+                toast.success('Task created successfully!');
             }
             setIsFormOpen(false);
             setEditingTask(null);
             fetchTasks();
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Failed to save task');
+            toast.error(err.response?.data?.message || 'Failed to save task');
         }
     };
 
@@ -58,8 +63,9 @@ const DashboardPage: React.FC = () => {
         try {
             await api.delete(`/tasks/${id}`);
             setTasks((prev) => prev.filter((t) => t._id !== id));
+            toast.success('Task deleted.');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Failed to delete task');
+            toast.error(err.response?.data?.message || 'Failed to delete task');
         }
     };
 
@@ -69,8 +75,9 @@ const DashboardPage: React.FC = () => {
             setTasks((prev) =>
                 prev.map((t) => (t._id === id ? { ...t, status } : t))
             );
+            toast.success('Status updated.');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Failed to update status');
+            toast.error(err.response?.data?.message || 'Failed to update status');
         }
     };
 
@@ -113,12 +120,6 @@ const DashboardPage: React.FC = () => {
                         <span>+ Add Task</span>
                     </button>
                 </div>
-
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-6">
-                        {error}
-                    </div>
-                )}
 
                 <TaskFilters
                     search={search}
