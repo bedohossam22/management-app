@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 
 const Login: React.FC = () => {
@@ -9,8 +10,27 @@ const Login: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    const validate = (): boolean => {
+        if (!email.trim()) {
+            toast.error('Email is required');
+            return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            toast.error('Please enter a valid email address');
+            return false;
+        }
+        if (!password) {
+            toast.error('Password is required');
+            return false;
+        }
+        return true;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
+
         setLoading(true);
         const result = await login({ email, password });
         setLoading(false);
@@ -34,7 +54,7 @@ const Login: React.FC = () => {
                     </p>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
                     <div className="rounded-md shadow-sm space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -42,11 +62,11 @@ const Login: React.FC = () => {
                             </label>
                             <input
                                 type="email"
-                                required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                 placeholder="you@example.com"
+                                autoComplete="email"
                             />
                         </div>
                         <div>
@@ -55,11 +75,11 @@ const Login: React.FC = () => {
                             </label>
                             <input
                                 type="password"
-                                required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                 placeholder="••••••••"
+                                autoComplete="current-password"
                             />
                         </div>
                     </div>

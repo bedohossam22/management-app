@@ -10,7 +10,6 @@ import type { Task, TaskFormData } from '../types';
 const DashboardPage: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     // Filters
     const [search, setSearch] = useState('');
@@ -30,7 +29,6 @@ const DashboardPage: React.FC = () => {
             setTasks(Array.isArray(data) ? data : []);
         } catch (err: any) {
             const message = err.response?.data?.message || 'Failed to fetch tasks';
-            setError(message);
             toast.error(message);
         } finally {
             setLoading(false);

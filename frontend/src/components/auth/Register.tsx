@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 
 const Register: React.FC = () => {
@@ -10,8 +11,43 @@ const Register: React.FC = () => {
     const { register } = useAuth();
     const navigate = useNavigate();
 
+    const validate = (): boolean => {
+        if (!name.trim()) {
+            toast.error('Name is required');
+            return false;
+        }
+        if (name.trim().length < 2 || name.trim().length > 50) {
+            toast.error('Name must be between 2 and 50 characters');
+            return false;
+        }
+        if (!email.trim()) {
+            toast.error('Email is required');
+            return false;
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            toast.error('Please enter a valid email address');
+            return false;
+        }
+        if (!password) {
+            toast.error('Password is required');
+            return false;
+        }
+        if (password.length < 6) {
+            toast.error('Password must be at least 6 characters');
+            return false;
+        }
+        if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+            toast.error('Password must contain at least one letter and one number');
+            return false;
+        }
+        return true;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
+
         setLoading(true);
         const result = await register({ name, email, password });
         setLoading(false);
@@ -35,7 +71,7 @@ const Register: React.FC = () => {
                     </p>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
                     <div className="rounded-md shadow-sm space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -43,7 +79,6 @@ const Register: React.FC = () => {
                             </label>
                             <input
                                 type="text"
-                                required
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -56,11 +91,11 @@ const Register: React.FC = () => {
                             </label>
                             <input
                                 type="email"
-                                required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                 placeholder="you@example.com"
+                                autoComplete="email"
                             />
                         </div>
                         <div>
@@ -69,15 +104,13 @@ const Register: React.FC = () => {
                             </label>
                             <input
                                 type="password"
-                                required
-                                minLength={6}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                 placeholder="••••••••"
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                                Password must be at least 6 characters with 1 letter & 1 number.
+                                At least 6 characters with 1 letter &amp; 1 number.
                             </p>
                         </div>
                     </div>
