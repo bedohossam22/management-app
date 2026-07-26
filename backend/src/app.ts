@@ -11,8 +11,30 @@ connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS — explicitly allow the deployed frontend + local dev
+const allowedOrigins = [
+    'https://management-app-frontend-five.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
+
+const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+        // Allow requests with no origin (curl, Thunder Client, server-to-server)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS policy: origin ${origin} is not allowed`));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+};
+
+// Handle preflight OPTIONS requests explicitly (required for Vercel serverless)
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
