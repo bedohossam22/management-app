@@ -10,9 +10,9 @@ A full-stack task management application built with **React + TypeScript** (fron
 |---|---|
 | **DeepSeek** | Initial planning, folder structure design, and architecture decisions |
 | **Gemini** | Configuration files (tsconfig, vite.config, vercel.json, environment setup) |
-| **Kimi** | Backend debugging — async error handling, Mongoose queries, and middleware logic |
+| **Kimi** | Backend debugging  |
 | **Thunder Client** | API testing — all endpoints tested with Thunder Client collections |
-| **Antigravity (Google DeepMind)** | Frontend UI enhancement — component design, animations, and UX polish |
+| **Claude** | Frontend UI enhancement — component design, and UX polish |
 
 ---
 
