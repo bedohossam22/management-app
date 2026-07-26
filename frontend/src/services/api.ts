@@ -28,10 +28,13 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            toast.error('Session expired. Please log in again.');
-            window.location.href = '/login';
+            const onAuthPage = ['/login', '/register'].includes(window.location.pathname);
+            if (!onAuthPage) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                toast.error('Session expired. Please log in again.');
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }
