@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, type ReactNode } from 'react';
+import { toast } from 'react-toastify';
 import api from '../services/api';
 import type { User, AuthContextType, RegisterData, LoginData } from '../types';
 
@@ -46,10 +47,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data));
             setUser(data);
+            toast.success('Account created successfully!');
             return { success: true };
         } catch (error: any) {
             const message = getErrorMessage(error, 'Registration failed');
             setError(message);
+            toast.error(message);
             return { success: false, error: message };
         }
     };
@@ -63,10 +66,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data));
             setUser(data);
+            toast.success('Welcome back!');
             return { success: true };
         } catch (error: any) {
             const message = getErrorMessage(error, 'Login failed');
             setError(message);
+            toast.error(message);
             return { success: false, error: message };
         }
     };
