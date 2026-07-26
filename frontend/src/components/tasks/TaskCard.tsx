@@ -45,7 +45,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusCha
                     <select
                         value={task.status}
                         onChange={(e) => onStatusChange(task._id, e.target.value as Task['status'])}
-                        className="text-xs bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="text-xs bg-gray-50 border border-gray-300 rounded px-2 pr-7 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                         <option value="To Do">To Do</option>
                         <option value="In Progress">In Progress</option>
