@@ -6,7 +6,7 @@ import {
     updateTask,
     deleteTask,
 } from '../controllers/taskController';
-import { taskValidation } from '../validators/taskValidator';
+import { createTaskValidation, updateTaskValidation } from '../validators/taskValidator';
 import { auth } from '../middleware/auth';
 
 const router = express.Router();
@@ -16,8 +16,8 @@ router.use(auth);
 
 router.get('/', getTasks);
 router.get('/:id', getTaskById);
-router.post('/', taskValidation, createTask);
-router.put('/:id', taskValidation, updateTask);
+router.post('/', createTaskValidation, createTask);
+router.put('/:id', updateTaskValidation, updateTask);
 router.delete('/:id', deleteTask);
 
 export default router;

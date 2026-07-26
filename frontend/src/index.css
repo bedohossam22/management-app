@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+/* Custom global styles or overrides can be placed below if needed */
