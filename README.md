@@ -1,10 +1,10 @@
-# 📋 Task Management App
+#  Task Management App
 
 A full-stack task management application built with **React + TypeScript** (frontend) and **Node.js + Express + MongoDB** (backend), featuring JWT authentication, full CRUD task operations, filtering, and search.
 
 ---
 
-## 🤖 AI Tools Used in Development
+##  AI Tools Used in Development
 
 | Tool | Role |
 |---|---|
@@ -40,7 +40,7 @@ Make sure you have the following installed:
 
 ---
 
-## ⚙️ Environment Variables
+##  Environment Variables
 
 ### Backend (`backend/.env`)
 
@@ -91,7 +91,7 @@ npm run dev                # Starts on http://localhost:5173
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 management-app/
