@@ -240,8 +240,6 @@ All task endpoints require the `Authorization: Bearer <token>` header.
 - [ ] **No email verification** — Registration does not verify email addresses
 - [ ] **No password reset** — Forgot/reset password flow is not implemented
 - [ ] **No due date notifications** — No reminders or alerts for upcoming deadlines
-- [ ] **No refresh token** — JWT expires after 7 days with no silent refresh
-- [ ] **Open CORS** — `app.use(cors())` allows all origins; restrict in production
 - [ ] **No rate limiting** — Auth endpoints are unprotected against brute force
 - [ ] **No test suite** — Unit or integration tests have not been written
 
