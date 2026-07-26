@@ -1,0 +1,9 @@
+{
+  "short_name": "TaskApp",
+  "name": "Task Management Application",
+  "icons": [],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "display": "standalone"
+}
