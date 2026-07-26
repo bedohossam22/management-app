@@ -33,7 +33,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                 <select
                     value={statusFilter}
                     onChange={(e) => onStatusChange(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="All">All Statuses</option>
                     <option value="To Do">To Do</option>
@@ -44,7 +44,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                 <select
                     value={priorityFilter}
                     onChange={(e) => onPriorityChange(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                     <option value="All">All Priorities</option>
                     <option value="High">High</option>
