@@ -15,6 +15,8 @@ const DashboardPage: React.FC = () => {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [priorityFilter, setPriorityFilter] = useState('All');
+    const [dueDateFilter, setDueDateFilter] = useState('All');
+    const [customDueDate, setCustomDueDate] = useState('');
 
     // Modal
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -96,7 +98,34 @@ const DashboardPage: React.FC = () => {
         const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
         const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
 
-        return matchesSearch && matchesStatus && matchesPriority;
+        const matchesDueDate = (() => {
+            if (dueDateFilter === 'All') return true;
+            if (!task.dueDate) return true;
+
+            const taskDate = new Date(task.dueDate);
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+            if (dueDateFilter === 'Overdue') {
+                return taskDate < todayStart && task.status !== 'Done';
+            }
+            if (dueDateFilter === 'Today') {
+                return taskDate >= todayStart && taskDate <= todayEnd;
+            }
+            if (dueDateFilter === 'Upcoming') {
+                return taskDate > todayEnd;
+            }
+            if (dueDateFilter === 'Custom' && customDueDate) {
+                const selected = new Date(customDueDate);
+                const selStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 0, 0, 0, 0);
+                const selEnd = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 23, 59, 59, 999);
+                return taskDate >= selStart && taskDate <= selEnd;
+            }
+            return true;
+        })();
+
+        return matchesSearch && matchesStatus && matchesPriority && matchesDueDate;
     });
 
     return (
@@ -125,6 +154,10 @@ const DashboardPage: React.FC = () => {
                     onStatusChange={setStatusFilter}
                     priorityFilter={priorityFilter}
                     onPriorityChange={setPriorityFilter}
+                    dueDateFilter={dueDateFilter}
+                    onDueDateChange={setDueDateFilter}
+                    customDueDate={customDueDate}
+                    onCustomDueDateChange={setCustomDueDate}
                 />
 
                 <TaskList

@@ -6,7 +6,7 @@ import { Task } from '../models/Task';
 
 export const getTasks = async (req: Request, res: Response) => {
     try {
-        const { status, priority, search } = req.query;
+        const { status, priority, search, dueDate } = req.query;
         const query: any = { user: req.user._id };
 
         // Filter by status
@@ -23,6 +23,32 @@ export const getTasks = async (req: Request, res: Response) => {
         if (search && typeof search === 'string' && search.trim()) {
             query.title = { $regex: search.trim(), $options: 'i' };
         }
+
+        // filter by due date
+        if (dueDate && typeof dueDate === 'string' && dueDate !== "All") {
+            const now = new Date();
+            const startoftoday = new Date(now.getFullYear(), now.getMonth(), now.getSeconds(), 0, 0, 0, 0);
+            const endofday = new Date(now.getFullYear(), now.getMonth(), now.getSeconds(), 23, 59, 59, 999);
+            const filterVal = dueDate.toLowerCase();
+            if (filterVal === 'overdue') {
+                query.dueDate = { $lt: startoftoday };
+                if (!query.status) {
+                    query.status = { $ne: 'Done' }
+                }
+            } else if (filterVal === 'today') {
+                query.dueDate = { $gte: startoftoday, $lt: endofday }
+            } else if (filterVal === 'upcoming') {
+                query.dueDate = { $gt: endofday }
+            } else {
+                const dateVal = new Date(dueDate);
+                if (!isNaN(dateVal.getTime())) {
+                    const dayStart = new Date(dateVal.getFullYear(), dateVal.getMonth(), dateVal.getDate(), 0, 0, 0, 0);
+                    const dayEnd = new Date(dateVal.getFullYear(), dateVal.getMonth(), dateVal.getDate(), 23, 59, 59, 999);
+                    query.dueDate = { $gte: dayStart, $lte: dayEnd };
+                }
+            }
+        }
+
 
         const tasks = await Task.find(query).sort({ createdAt: -1 });
 

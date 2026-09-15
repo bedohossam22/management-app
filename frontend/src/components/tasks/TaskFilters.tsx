@@ -7,6 +7,10 @@ interface TaskFiltersProps {
     onStatusChange: (val: string) => void;
     priorityFilter: string;
     onPriorityChange: (val: string) => void;
+    dueDateFilter: string;
+    onDueDateChange: (val: string) => void;
+    customDueDate: string;
+    onCustomDueDateChange: (val: string) => void;
 }
 
 const TaskFilters: React.FC<TaskFiltersProps> = ({
@@ -16,6 +20,10 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
     onStatusChange,
     priorityFilter,
     onPriorityChange,
+    dueDateFilter,
+    onDueDateChange,
+    customDueDate,
+    onCustomDueDateChange,
 }) => {
     return (
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -29,7 +37,7 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                 />
             </div>
 
-            <div className="flex w-full sm:w-auto items-center space-x-3">
+            <div className="flex flex-wrap w-full sm:w-auto items-center gap-3">
                 <select
                     value={statusFilter}
                     onChange={(e) => onStatusChange(e.target.value)}
@@ -51,6 +59,27 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                     <option value="Medium">Medium</option>
                     <option value="Low">Low</option>
                 </select>
+
+                <select
+                    value={dueDateFilter}
+                    onChange={(e) => onDueDateChange(e.target.value)}
+                    className="px-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="All">All Due Dates</option>
+                    <option value="Today">Due Today</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Custom">Specific Date</option>
+                </select>
+
+                {dueDateFilter === 'Custom' && (
+                    <input
+                        type="date"
+                        value={customDueDate}
+                        onChange={(e) => onCustomDueDateChange(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                )}
             </div>
         </div>
     );
