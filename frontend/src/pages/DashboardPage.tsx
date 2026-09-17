@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import TaskList from '../components/tasks/TaskList';
 import TaskFilters from '../components/tasks/TaskFilters';
 import TaskForm from '../components/tasks/TaskForm';
+import TaskStats from '../components/tasks/TaskStats';
 import api from '../services/api';
 import type { Task, TaskFormData } from '../types';
 
@@ -146,6 +147,8 @@ const DashboardPage: React.FC = () => {
                         <span>+ Add Task</span>
                     </button>
                 </div>
+
+                <TaskStats tasks={tasks} />
 
                 <TaskFilters
                     search={search}
