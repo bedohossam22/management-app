@@ -5,6 +5,7 @@ import TaskList from '../components/tasks/TaskList';
 import TaskFilters from '../components/tasks/TaskFilters';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskStats from '../components/tasks/TaskStats';
+import ExportDropdown from '../components/tasks/ExportDropdown';
 import api from '../services/api';
 import type { Task, TaskFormData } from '../types';
 
