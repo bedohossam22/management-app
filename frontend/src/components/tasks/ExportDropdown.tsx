@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Task } from '../../types';
+import type { Task } from '../../types';
 import { exportTasksToCSV, exportTasksToJSON } from '../../utils/exportTasks';
 import { toast } from 'react-toastify';
 

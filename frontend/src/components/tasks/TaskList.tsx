@@ -8,6 +8,7 @@ interface TaskListProps {
     onEdit: (task: Task) => void;
     onDelete: (id: string) => void;
     onStatusChange: (id: string, status: Task['status']) => void;
+    onDuplicate?: (task: Task) => void;
 }
 
 const TaskList: React.FC<TaskListProps> = ({
@@ -16,6 +17,7 @@ const TaskList: React.FC<TaskListProps> = ({
     onEdit,
     onDelete,
     onStatusChange,
+    onDuplicate,
 }) => {
     if (loading) {
         return (
@@ -44,6 +46,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onStatusChange={onStatusChange}
+                    onDuplicate={onDuplicate}
                 />
             ))}
         </div>

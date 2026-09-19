@@ -7,9 +7,10 @@ interface TaskCardProps {
     onEdit: (task: Task) => void;
     onDelete: (id: string) => void;
     onStatusChange: (id: string, status: Task['status']) => void;
+    onDuplicate?: (task: Task) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusChange }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusChange, onDuplicate }) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-3">
@@ -41,7 +42,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusCha
                     Due: <span className="font-medium text-gray-700">{formatDate(task.dueDate)}</span>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                     <select
                         value={task.status}
                         onChange={(e) => onStatusChange(task._id, e.target.value as Task['status'])}
@@ -52,15 +53,25 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onStatusCha
                         <option value="Done">Done</option>
                     </select>
 
+                    {onDuplicate && (
+                        <button
+                            onClick={() => onDuplicate(task)}
+                            className="text-gray-600 hover:text-gray-900 font-medium px-1.5 py-1 hover:bg-gray-100 rounded transition-colors"
+                            title="Duplicate task"
+                        >
+                            Copy
+                        </button>
+                    )}
+
                     <button
                         onClick={() => onEdit(task)}
-                        className="text-blue-600 hover:text-blue-800 font-medium px-2 py-1"
+                        className="text-blue-600 hover:text-blue-800 font-medium px-1.5 py-1 hover:bg-blue-50 rounded transition-colors"
                     >
                         Edit
                     </button>
                     <button
                         onClick={() => onDelete(task._id)}
-                        className="text-red-600 hover:text-red-800 font-medium px-2 py-1"
+                        className="text-red-600 hover:text-red-800 font-medium px-1.5 py-1 hover:bg-red-50 rounded transition-colors"
                     >
                         Delete
                     </button>
