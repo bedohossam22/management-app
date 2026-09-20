@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import Navbar from '../components/common/Navbar';
 import TaskList from '../components/tasks/TaskList';
@@ -19,6 +19,7 @@ const DashboardPage: React.FC = () => {
     const [priorityFilter, setPriorityFilter] = useState('All');
     const [dueDateFilter, setDueDateFilter] = useState('All');
     const [customDueDate, setCustomDueDate] = useState('');
+    const [sortBy, setSortBy] = useState('createdAt-desc');
 
     // Modal
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -92,43 +93,85 @@ const DashboardPage: React.FC = () => {
         setIsFormOpen(true);
     };
 
-    const filteredTasks = tasks.filter((task) => {
-        const matchesSearch =
-            task.title.toLowerCase().includes(search.toLowerCase()) ||
-            (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
+    const handleResetFilters = () => {
+        setSearch('');
+        setStatusFilter('All');
+        setPriorityFilter('All');
+        setDueDateFilter('All');
+        setCustomDueDate('');
+        setSortBy('createdAt-desc');
+    };
 
-        const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-        const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
+    const filteredAndSortedTasks = useMemo(() => {
+        const filtered = tasks.filter((task) => {
+            const matchesSearch =
+                task.title.toLowerCase().includes(search.toLowerCase()) ||
+                (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
 
-        const matchesDueDate = (() => {
-            if (dueDateFilter === 'All') return true;
-            if (!task.dueDate) return true;
+            const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
+            const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
 
-            const taskDate = new Date(task.dueDate);
-            const now = new Date();
-            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-            const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            const matchesDueDate = (() => {
+                if (dueDateFilter === 'All') return true;
+                if (!task.dueDate) return true;
 
-            if (dueDateFilter === 'Overdue') {
-                return taskDate < todayStart && task.status !== 'Done';
+                const taskDate = new Date(task.dueDate);
+                const now = new Date();
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+                const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+                if (dueDateFilter === 'Overdue') {
+                    return taskDate < todayStart && task.status !== 'Done';
+                }
+                if (dueDateFilter === 'Today') {
+                    return taskDate >= todayStart && taskDate <= todayEnd;
+                }
+                if (dueDateFilter === 'Upcoming') {
+                    return taskDate > todayEnd;
+                }
+                if (dueDateFilter === 'Custom' && customDueDate) {
+                    const selected = new Date(customDueDate);
+                    const selStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 0, 0, 0, 0);
+                    const selEnd = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 23, 59, 59, 999);
+                    return taskDate >= selStart && taskDate <= selEnd;
+                }
+                return true;
+            })();
+
+            return matchesSearch && matchesStatus && matchesPriority && matchesDueDate;
+        });
+
+        const priorityOrder: Record<string, number> = { High: 3, Medium: 2, Low: 1 };
+
+        return [...filtered].sort((a, b) => {
+            switch (sortBy) {
+                case 'createdAt-asc':
+                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                case 'createdAt-desc':
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                case 'dueDate-asc': {
+                    const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                    const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                    return da - db;
+                }
+                case 'dueDate-desc': {
+                    const da = a.dueDate ? new Date(a.dueDate).getTime() : -Infinity;
+                    const db = b.dueDate ? new Date(b.dueDate).getTime() : -Infinity;
+                    return db - da;
+                }
+                case 'priority-desc':
+                    return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+                case 'priority-asc':
+                    return (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+                case 'title-asc':
+                    return a.title.localeCompare(b.title);
+                case 'title-desc':
+                    return b.title.localeCompare(a.title);
+                default:
+                    return 0;
             }
-            if (dueDateFilter === 'Today') {
-                return taskDate >= todayStart && taskDate <= todayEnd;
-            }
-            if (dueDateFilter === 'Upcoming') {
-                return taskDate > todayEnd;
-            }
-            if (dueDateFilter === 'Custom' && customDueDate) {
-                const selected = new Date(customDueDate);
-                const selStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 0, 0, 0, 0);
-                const selEnd = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 23, 59, 59, 999);
-                return taskDate >= selStart && taskDate <= selEnd;
-            }
-            return true;
-        })();
-
-        return matchesSearch && matchesStatus && matchesPriority && matchesDueDate;
-    });
+        });
+    }, [tasks, search, statusFilter, priorityFilter, dueDateFilter, customDueDate, sortBy]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -141,12 +184,15 @@ const DashboardPage: React.FC = () => {
                         <p className="text-sm text-gray-500">Manage and track your active tasks</p>
                     </div>
 
-                    <button
-                        onClick={handleOpenCreate}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-2"
-                    >
-                        <span>+ Add Task</span>
-                    </button>
+                    <div className="flex items-center space-x-3">
+                        <ExportDropdown filteredTasks={filteredAndSortedTasks} allTasks={tasks} />
+                        <button
+                            onClick={handleOpenCreate}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-2 cursor-pointer"
+                        >
+                            <span>+ Add Task</span>
+                        </button>
+                    </div>
                 </div>
 
                 <TaskStats tasks={tasks} />
@@ -162,10 +208,15 @@ const DashboardPage: React.FC = () => {
                     onDueDateChange={setDueDateFilter}
                     customDueDate={customDueDate}
                     onCustomDueDateChange={setCustomDueDate}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
+                    totalTasks={tasks.length}
+                    filteredCount={filteredAndSortedTasks.length}
+                    onResetFilters={handleResetFilters}
                 />
 
                 <TaskList
-                    tasks={filteredTasks}
+                    tasks={filteredAndSortedTasks}
                     loading={loading}
                     onEdit={handleOpenEdit}
                     onDelete={handleDeleteTask}
