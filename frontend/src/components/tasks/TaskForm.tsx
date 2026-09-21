@@ -3,12 +3,13 @@ import type { Task, TaskFormData } from '../../types';
 
 interface TaskFormProps {
     initialData?: Task | null;
+    defaultStatus?: Task['status'];
     onSubmit: (formData: TaskFormData) => Promise<void>;
     onCancel: () => void;
     isOpen: boolean;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ initialData, onSubmit, onCancel, isOpen }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, onSubmit, onCancel, isOpen }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState<Task['status']>('To Do');
@@ -26,11 +27,11 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, onSubmit, onCancel, is
         } else {
             setTitle('');
             setDescription('');
-            setStatus('To Do');
+            setStatus(defaultStatus || 'To Do');
             setPriority('Medium');
             setDueDate(new Date().toISOString().split('T')[0]);
         }
-    }, [initialData, isOpen]);
+    }, [initialData, defaultStatus, isOpen]);
 
     if (!isOpen) return null;
 

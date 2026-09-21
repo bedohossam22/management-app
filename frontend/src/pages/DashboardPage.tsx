@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import Navbar from '../components/common/Navbar';
 import TaskList from '../components/tasks/TaskList';
+import KanbanBoard from '../components/tasks/KanbanBoard';
 import TaskFilters from '../components/tasks/TaskFilters';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskStats from '../components/tasks/TaskStats';
@@ -9,9 +10,22 @@ import ExportDropdown from '../components/tasks/ExportDropdown';
 import api from '../services/api';
 import type { Task, TaskFormData } from '../types';
 
+type ViewMode = 'list' | 'kanban';
+
 const DashboardPage: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // View Mode (List or Kanban Board)
+    const [viewMode, setViewMode] = useState<ViewMode>(() => {
+        const saved = localStorage.getItem('task_view_mode') as ViewMode;
+        return saved === 'kanban' ? 'kanban' : 'list';
+    });
+
+    const handleViewChange = (mode: ViewMode) => {
+        setViewMode(mode);
+        localStorage.setItem('task_view_mode', mode);
+    };
 
     // Filters
     const [search, setSearch] = useState('');
@@ -21,9 +35,10 @@ const DashboardPage: React.FC = () => {
     const [customDueDate, setCustomDueDate] = useState('');
     const [sortBy, setSortBy] = useState('createdAt-desc');
 
-    // Modal
+    // Modal & Form
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [defaultTaskStatus, setDefaultTaskStatus] = useState<Task['status']>('To Do');
 
     const fetchTasks = useCallback(async () => {
         try {
@@ -73,18 +88,22 @@ const DashboardPage: React.FC = () => {
 
     const handleStatusChange = async (id: string, status: Task['status']) => {
         try {
-            await api.put(`/tasks/${id}`, { status });
+            // Optimistic update
             setTasks((prev) =>
                 prev.map((t) => (t._id === id ? { ...t, status } : t))
             );
-            toast.success('Status updated.');
+            await api.put(`/tasks/${id}`, { status });
+            toast.success(`Task moved to ${status}`);
         } catch (err: any) {
+            // Revert by re-fetching on error
+            fetchTasks();
             toast.error(err.response?.data?.message || 'Failed to update status');
         }
     };
 
-    const handleOpenCreate = () => {
+    const handleOpenCreate = (status: Task['status'] = 'To Do') => {
         setEditingTask(null);
+        setDefaultTaskStatus(status);
         setIsFormOpen(true);
     };
 
@@ -178,19 +197,59 @@ const DashboardPage: React.FC = () => {
             <Navbar />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Header with Title and Global Actions */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Task Dashboard</h1>
                         <p className="text-sm text-gray-500">Manage and track your active tasks</p>
                     </div>
 
-                    <div className="flex items-center space-x-3">
+                    <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                        {/* View Switcher (List vs Kanban) */}
+                        <div className="inline-flex items-center bg-gray-200/90 p-1 rounded-xl border border-gray-200 shadow-xs">
+                            <button
+                                type="button"
+                                onClick={() => handleViewChange('list')}
+                                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                    viewMode === 'list'
+                                        ? 'bg-white text-blue-600 shadow-xs'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                                title="Switch to List View"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                <span>List</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => handleViewChange('kanban')}
+                                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                    viewMode === 'kanban'
+                                        ? 'bg-white text-blue-600 shadow-xs'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                                title="Switch to Kanban Board View"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                                </svg>
+                                <span>Kanban</span>
+                            </button>
+                        </div>
+
                         <ExportDropdown filteredTasks={filteredAndSortedTasks} allTasks={tasks} />
+
                         <button
-                            onClick={handleOpenCreate}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center space-x-2 cursor-pointer"
+                            onClick={() => handleOpenCreate('To Do')}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5 cursor-pointer"
                         >
-                            <span>+ Add Task</span>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span>Add Task</span>
                         </button>
                     </div>
                 </div>
@@ -215,18 +274,30 @@ const DashboardPage: React.FC = () => {
                     onResetFilters={handleResetFilters}
                 />
 
-                <TaskList
-                    tasks={filteredAndSortedTasks}
-                    loading={loading}
-                    onEdit={handleOpenEdit}
-                    onDelete={handleDeleteTask}
-                    onStatusChange={handleStatusChange}
-                />
+                {viewMode === 'list' ? (
+                    <TaskList
+                        tasks={filteredAndSortedTasks}
+                        loading={loading}
+                        onEdit={handleOpenEdit}
+                        onDelete={handleDeleteTask}
+                        onStatusChange={handleStatusChange}
+                    />
+                ) : (
+                    <KanbanBoard
+                        tasks={filteredAndSortedTasks}
+                        loading={loading}
+                        onEdit={handleOpenEdit}
+                        onDelete={handleDeleteTask}
+                        onStatusChange={handleStatusChange}
+                        onAddTask={(status) => handleOpenCreate(status || 'To Do')}
+                    />
+                )}
             </main>
 
             <TaskForm
                 isOpen={isFormOpen}
                 initialData={editingTask}
+                defaultStatus={defaultTaskStatus}
                 onSubmit={handleCreateTask}
                 onCancel={() => {
                     setIsFormOpen(false);
