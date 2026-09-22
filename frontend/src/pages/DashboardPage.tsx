@@ -86,6 +86,43 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleDuplicateTask = async (task: Task) => {
+        try {
+            let dueDate = '';
+            if (task.dueDate) {
+                const orig = new Date(task.dueDate);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (!isNaN(orig.getTime()) && orig >= today) {
+                    dueDate = orig.toISOString().split('T')[0];
+                } else {
+                    dueDate = today.toISOString().split('T')[0];
+                }
+            } else {
+                dueDate = new Date().toISOString().split('T')[0];
+            }
+
+            const duplicatePayload: TaskFormData = {
+                title: `${task.title} (Copy)`,
+                description: task.description || '',
+                priority: task.priority,
+                status: task.status,
+                dueDate,
+            };
+
+            const response = await api.post('/tasks', duplicatePayload);
+            const created = response.data.data || response.data;
+            if (created && created._id) {
+                setTasks((prev) => [created, ...prev]);
+            } else {
+                fetchTasks();
+            }
+            toast.success(`Task "${task.title}" duplicated!`);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to duplicate task');
+        }
+    };
+
     const handleStatusChange = async (id: string, status: Task['status']) => {
         try {
             // Optimistic update
@@ -280,6 +317,7 @@ const DashboardPage: React.FC = () => {
                         loading={loading}
                         onEdit={handleOpenEdit}
                         onDelete={handleDeleteTask}
+                        onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
                     />
                 ) : (
@@ -288,6 +326,7 @@ const DashboardPage: React.FC = () => {
                         loading={loading}
                         onEdit={handleOpenEdit}
                         onDelete={handleDeleteTask}
+                        onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
                         onAddTask={(status) => handleOpenCreate(status || 'To Do')}
                     />

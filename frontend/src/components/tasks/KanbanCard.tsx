@@ -7,6 +7,7 @@ interface KanbanCardProps {
     onEdit: (task: Task) => void;
     onDelete: (id: string) => void;
     onStatusChange: (id: string, status: Task['status']) => void;
+    onDuplicate?: (task: Task) => void;
     isDragging?: boolean;
     onDragStart: (e: React.DragEvent<HTMLDivElement>, task: Task) => void;
     onDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -17,6 +18,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     onEdit,
     onDelete,
     onStatusChange,
+    onDuplicate,
     isDragging,
     onDragStart,
     onDragEnd,
@@ -84,6 +86,21 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 </span>
 
                 <div className="flex items-center space-x-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    {onDuplicate && (
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDuplicate(task);
+                            }}
+                            className="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Duplicate task"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={(e) => {
