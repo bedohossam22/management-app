@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import CalendarPage from './pages/CalendarPage';
 import NotFoundPage from './pages/NotFoundPage';
 import NotAuthorizedPage from './pages/NotAuthorizedPage';
 import PrivateRoute from './components/common/PrivateRoute';
@@ -23,6 +24,7 @@ function App() {
       <Route path="/unauthorized" element={<NotAuthorizedPage />} />
       <Route path="/" element={<PrivateRoute />}>
         <Route index element={<DashboardPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
