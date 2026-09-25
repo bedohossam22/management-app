@@ -48,11 +48,12 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="w-full sm:flex-1 relative">
                     <input
+                        id="task-search-input"
                         type="text"
-                        placeholder="Search tasks by title or description..."
+                        placeholder="Search tasks by title or description... (Press / to focus)"
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
-                        className="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-9 pr-14 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <svg
                         className="w-4 h-4 text-gray-400 absolute left-3 top-3 pointer-events-none"
@@ -62,17 +63,23 @@ const TaskFilters: React.FC<TaskFiltersProps> = ({
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    {search && (
-                        <button
-                            onClick={() => onSearchChange('')}
-                            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
-                            title="Clear search"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    )}
+                    <div className="absolute right-2.5 top-2 flex items-center space-x-1">
+                        {search ? (
+                            <button
+                                onClick={() => onSearchChange('')}
+                                className="text-gray-400 hover:text-gray-600 p-0.5"
+                                title="Clear search"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        ) : (
+                            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-semibold text-gray-400 bg-gray-100 border border-gray-200 rounded font-mono">
+                                /
+                            </kbd>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex flex-wrap w-full sm:w-auto items-center gap-2.5">

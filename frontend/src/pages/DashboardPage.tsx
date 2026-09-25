@@ -7,6 +7,7 @@ import TaskFilters from '../components/tasks/TaskFilters';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskStats from '../components/tasks/TaskStats';
 import ExportDropdown from '../components/tasks/ExportDropdown';
+import KeyboardShortcutsModal from '../components/common/KeyboardShortcutsModal';
 import api from '../services/api';
 import type { Task, TaskFormData } from '../types';
 
@@ -39,6 +40,7 @@ const DashboardPage: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [defaultTaskStatus, setDefaultTaskStatus] = useState<Task['status']>('To Do');
+    const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
     const fetchTasks = useCallback(async () => {
         try {
@@ -57,6 +59,51 @@ const DashboardPage: React.FC = () => {
     useEffect(() => {
         fetchTasks();
     }, [fetchTasks]);
+
+    // Keyboard Shortcuts handler
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const activeElement = document.activeElement;
+            const isTyping =
+                activeElement?.tagName === 'INPUT' ||
+                activeElement?.tagName === 'TEXTAREA' ||
+                activeElement?.tagName === 'SELECT' ||
+                (activeElement as HTMLElement)?.isContentEditable;
+
+            if (isTyping) {
+                if (e.key === 'Escape') {
+                    (activeElement as HTMLElement)?.blur();
+                }
+                return;
+            }
+
+            if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+                e.preventDefault();
+                setIsShortcutsOpen((prev) => !prev);
+            } else if (e.key === 'n' || e.key === 'N' || e.key === 'c' || e.key === 'C') {
+                if (!isFormOpen && !isShortcutsOpen) {
+                    e.preventDefault();
+                    handleOpenCreate('To Do');
+                }
+            } else if (e.key === '/') {
+                e.preventDefault();
+                const searchInput = document.getElementById('task-search-input') as HTMLInputElement | null;
+                searchInput?.focus();
+                searchInput?.select();
+            } else if (e.key === '1') {
+                handleViewChange('list');
+            } else if (e.key === '2') {
+                handleViewChange('kanban');
+            } else if (e.key === 'Escape') {
+                if (isShortcutsOpen) {
+                    setIsShortcutsOpen(false);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isFormOpen, isShortcutsOpen]);
 
     const handleCreateTask = async (formData: TaskFormData) => {
         try {
@@ -280,6 +327,17 @@ const DashboardPage: React.FC = () => {
                         <ExportDropdown filteredTasks={filteredAndSortedTasks} allTasks={tasks} />
 
                         <button
+                            type="button"
+                            onClick={() => setIsShortcutsOpen(true)}
+                            className="px-3 py-2 bg-white hover:bg-gray-100/80 border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+                            title="Keyboard Shortcuts (?)"
+                        >
+                            <span>⌨️</span>
+                            <span className="hidden md:inline">Hotkeys</span>
+                            <kbd className="hidden lg:inline-block px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-gray-50 rounded border border-gray-200">?</kbd>
+                        </button>
+
+                        <button
                             onClick={() => handleOpenCreate('To Do')}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center space-x-1.5 cursor-pointer"
                         >
@@ -287,6 +345,7 @@ const DashboardPage: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
                             </svg>
                             <span>Add Task</span>
+                            <kbd className="hidden md:inline-block ml-1 px-1.5 py-0.5 text-[10px] font-mono text-blue-200 bg-blue-700/50 rounded">N</kbd>
                         </button>
                     </div>
                 </div>
@@ -342,6 +401,11 @@ const DashboardPage: React.FC = () => {
                     setIsFormOpen(false);
                     setEditingTask(null);
                 }}
+            />
+
+            <KeyboardShortcutsModal
+                isOpen={isShortcutsOpen}
+                onClose={() => setIsShortcutsOpen(false)}
             />
         </div>
     );
