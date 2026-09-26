@@ -60,6 +60,37 @@ const DashboardPage: React.FC = () => {
         fetchTasks();
     }, [fetchTasks]);
 
+    // Custom events from Command Palette or global shortcuts
+    useEffect(() => {
+        const handleOpenTaskForm = () => {
+            setEditingTask(null);
+            setDefaultTaskStatus('To Do');
+            setIsFormOpen(true);
+        };
+
+        const handleSelectTask = (e: any) => {
+            const task = e.detail;
+            if (task) {
+                setEditingTask(task);
+                setIsFormOpen(true);
+            }
+        };
+
+        const handleOpenShortcuts = () => {
+            setIsShortcutsOpen(true);
+        };
+
+        window.addEventListener('open-task-form', handleOpenTaskForm);
+        window.addEventListener('select-task', handleSelectTask);
+        window.addEventListener('open-shortcuts-modal', handleOpenShortcuts);
+
+        return () => {
+            window.removeEventListener('open-task-form', handleOpenTaskForm);
+            window.removeEventListener('select-task', handleSelectTask);
+            window.removeEventListener('open-shortcuts-modal', handleOpenShortcuts);
+        };
+    }, []);
+
     // Keyboard Shortcuts handler
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

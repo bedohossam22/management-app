@@ -6,6 +6,7 @@ interface KeyboardShortcutsModalProps {
 }
 
 const shortcuts = [
+    { key: 'Ctrl + K', desc: 'Open Command Palette & Global Search' },
     { key: 'N', desc: 'Create a new task' },
     { key: '/', desc: 'Quickly focus search' },
     { key: '1', desc: 'Switch to List view' },
