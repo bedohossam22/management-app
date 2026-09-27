@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import Navbar from '../components/common/Navbar';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskDetails from '../components/tasks/TaskDetails';
+import ExportDropdown from '../components/tasks/ExportDropdown';
 import api from '../services/api';
 import type { Task, TaskFormData } from '../types';
 import { formatDate, getPriorityBadgeClass, getStatusBadgeClass } from '../utils/helpers';
@@ -433,10 +434,13 @@ const CalendarPage: React.FC = () => {
                                 <option value="Low">Low</option>
                             </select>
 
+                            {/* Export Dropdown */}
+                            <ExportDropdown filteredTasks={filteredTasks} allTasks={tasks} />
+
                             {/* Add Task Button */}
                             <button
                                 onClick={() => handleOpenCreateForDate(selectedDate || new Date())}
-                                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1"
+                                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center space-x-1 cursor-pointer"
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
