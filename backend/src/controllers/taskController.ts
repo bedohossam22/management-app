@@ -111,7 +111,7 @@ export const createTask = async (req: Request, res: Response) => {
             });
         }
         //Create Task
-        const { title, description, status, priority, dueDate } = req.body;
+        const { title, description, status, priority, dueDate, subtasks } = req.body;
 
         const task = await Task.create({
             title,
@@ -119,6 +119,7 @@ export const createTask = async (req: Request, res: Response) => {
             status,
             priority,
             dueDate,
+            subtasks: Array.isArray(subtasks) ? subtasks : [],
             user: req.user._id,
         });
 
@@ -160,13 +161,16 @@ export const updateTask = async (req: Request, res: Response) => {
             });
         }
 
-        const { title, description, status, priority, dueDate } = req.body;
+        const { title, description, status, priority, dueDate, subtasks } = req.body;
 
-        task.title = title || task.title;
-        task.description = description !== undefined ? description : task.description;
-        task.status = status || task.status;
-        task.priority = priority || task.priority;
-        task.dueDate = dueDate || task.dueDate;
+        if (title !== undefined) task.title = title;
+        if (description !== undefined) task.description = description;
+        if (status !== undefined) task.status = status;
+        if (priority !== undefined) task.priority = priority;
+        if (dueDate !== undefined) task.dueDate = dueDate;
+        if (Array.isArray(subtasks)) {
+            task.subtasks = subtasks;
+        }
 
         await task.save();
 
@@ -189,6 +193,54 @@ export const updateTask = async (req: Request, res: Response) => {
         });
     }
 };
+
+// Toggle Subtask Completion
+export const toggleSubtask = async (req: Request, res: Response) => {
+    try {
+        const { id, subtaskId } = req.params;
+        const task = await Task.findOne({
+            _id: id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        const subtask = (task.subtasks as any).id(subtaskId) || task.subtasks.find((s: any) => s._id?.toString() === subtaskId);
+        if (!subtask) {
+            return res.status(404).json({
+                success: false,
+                message: 'Subtask not found',
+            });
+        }
+
+        subtask.isCompleted = !subtask.isCompleted;
+        await task.save();
+
+        res.json({
+            success: true,
+            message: 'Subtask toggled successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+        console.error('Toggle subtask error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling subtask',
+        });
+    }
+};
+
 // Delete Task
 
 export const deleteTask = async (req: Request, res: Response) => {

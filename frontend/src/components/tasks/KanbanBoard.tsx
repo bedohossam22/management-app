@@ -10,6 +10,7 @@ interface KanbanBoardProps {
     onStatusChange: (id: string, status: Task['status']) => void;
     onAddTask: (status?: Task['status']) => void;
     onDuplicate?: (task: Task) => void;
+    onToggleSubtask?: (taskId: string, subtaskId?: string, index?: number) => void;
 }
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({
@@ -20,6 +21,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     onStatusChange,
     onAddTask,
     onDuplicate,
+    onToggleSubtask,
 }) => {
     const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
 
@@ -85,6 +87,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 onStatusChange={onStatusChange}
                 onAddTask={onAddTask}
                 onDuplicate={onDuplicate}
+                onToggleSubtask={onToggleSubtask}
                 draggedTaskId={draggedTaskId}
                 onCardDragStart={handleCardDragStart}
                 onCardDragEnd={handleCardDragEnd}
@@ -100,6 +103,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 onStatusChange={onStatusChange}
                 onAddTask={onAddTask}
                 onDuplicate={onDuplicate}
+                onToggleSubtask={onToggleSubtask}
                 draggedTaskId={draggedTaskId}
                 onCardDragStart={handleCardDragStart}
                 onCardDragEnd={handleCardDragEnd}
@@ -115,6 +119,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 onStatusChange={onStatusChange}
                 onAddTask={onAddTask}
                 onDuplicate={onDuplicate}
+                onToggleSubtask={onToggleSubtask}
                 draggedTaskId={draggedTaskId}
                 onCardDragStart={handleCardDragStart}
                 onCardDragEnd={handleCardDragEnd}

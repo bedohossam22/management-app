@@ -122,6 +122,14 @@ const AnalyticsPage: React.FC = () => {
             }
         }
 
+        // Subtasks Metrics
+        const totalSubtasks = filteredTasks.reduce((acc, t) => acc + (t.subtasks?.length || 0), 0);
+        const completedSubtasks = filteredTasks.reduce(
+            (acc, t) => acc + (t.subtasks?.filter((s) => s.isCompleted).length || 0),
+            0
+        );
+        const subtaskRate = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
+
         // Smart Insights Engine
         const insights: { type: 'success' | 'warning' | 'info'; title: string; text: string }[] = [];
 
@@ -181,6 +189,22 @@ const AnalyticsPage: React.FC = () => {
                     text: `You have completed ${completionRate}% of all tasks in this period. Outstanding execution!`,
                 });
             }
+
+            if (totalSubtasks > 0) {
+                if (subtaskRate === 100) {
+                    insights.push({
+                        type: 'success',
+                        title: 'Checklists Completed 100%!',
+                        text: `All ${totalSubtasks} checklist subtasks across your tasks are completed.`,
+                    });
+                } else if (subtaskRate >= 60) {
+                    insights.push({
+                        type: 'info',
+                        title: 'Checklist Progress',
+                        text: `${completedSubtasks} of ${totalSubtasks} subtasks completed (${subtaskRate}%). Keep crossing off items!`,
+                    });
+                }
+            }
         }
 
         return {
@@ -191,6 +215,9 @@ const AnalyticsPage: React.FC = () => {
             completionRate,
             inProgressRate,
             todoRate,
+            totalSubtasks,
+            completedSubtasks,
+            subtaskRate,
             overdueTasks,
             dueTodayTasks,
             upcomingTasks,

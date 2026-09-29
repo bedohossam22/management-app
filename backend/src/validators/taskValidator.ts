@@ -39,6 +39,11 @@ const dueDateRule = body('dueDate')
     return true;
   });
 
+const subtasksRule = body('subtasks')
+  .optional()
+  .isArray()
+  .withMessage('Subtasks must be an array');
+
 // For CREATE – title and dueDate are required
 export const createTaskValidation = [
   titleRule.notEmpty().withMessage('Title is required'),
@@ -46,6 +51,7 @@ export const createTaskValidation = [
   statusRule,
   priorityRule,
   dueDateRule.notEmpty().withMessage('Due date is required'),
+  subtasksRule,
 ];
 
 // For UPDATE – all fields optional
@@ -55,4 +61,5 @@ export const updateTaskValidation = [
   statusRule,
   priorityRule,
   dueDateRule,
+  subtasksRule,
 ];

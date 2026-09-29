@@ -33,17 +33,26 @@ export const exportTasksToCSV = (tasks: Task[], customFilename?: string): boolea
         return false;
     }
 
-    const headers = ['Title', 'Description', 'Status', 'Priority', 'Due Date', 'Created At', 'Updated At'];
+    const headers = ['Title', 'Description', 'Status', 'Priority', 'Due Date', 'Subtasks Progress', 'Subtasks List', 'Created At', 'Updated At'];
     
-    const rows = tasks.map((task) => [
-        escapeCSVField(task.title),
-        escapeCSVField(task.description || ''),
-        escapeCSVField(task.status),
-        escapeCSVField(task.priority),
-        escapeCSVField(task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''),
-        escapeCSVField(task.createdAt ? new Date(task.createdAt).toLocaleString() : ''),
-        escapeCSVField(task.updatedAt ? new Date(task.updatedAt).toLocaleString() : ''),
-    ]);
+    const rows = tasks.map((task) => {
+        const subtasks = task.subtasks || [];
+        const completed = subtasks.filter((s) => s.isCompleted).length;
+        const subtaskProgress = subtasks.length > 0 ? `${completed}/${subtasks.length} (${Math.round((completed / subtasks.length) * 100)}%)` : 'None';
+        const subtaskList = subtasks.map((s) => `[${s.isCompleted ? 'x' : ' '}] ${s.title}`).join('; ');
+
+        return [
+            escapeCSVField(task.title),
+            escapeCSVField(task.description || ''),
+            escapeCSVField(task.status),
+            escapeCSVField(task.priority),
+            escapeCSVField(task.dueDate ? new Date(task.dueDate).toLocaleDateString() : ''),
+            escapeCSVField(subtaskProgress),
+            escapeCSVField(subtaskList),
+            escapeCSVField(task.createdAt ? new Date(task.createdAt).toLocaleString() : ''),
+            escapeCSVField(task.updatedAt ? new Date(task.updatedAt).toLocaleString() : ''),
+        ];
+    });
 
     // Prepend UTF-8 BOM so Excel opens non-ASCII characters properly
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
@@ -83,16 +92,33 @@ export const exportTasksToMarkdown = (tasks: Task[], customFilename?: string): b
     const progressPercent = Math.round((doneCount / tasks.length) * 100);
 
     let md = `# Task Export (${dateStr})\n\n`;
-    md += `**Summary:** ${doneCount} of ${tasks.length} completed (${progressPercent}%)\n\n`;
-    md += `| Status | Priority | Title | Due Date | Description |\n`;
-    md += `|---|---|---|---|---|\n`;
+    md += `**Summary:** ${doneCount} of ${tasks.length} tasks completed (${progressPercent}%)\n\n`;
+    md += `| Status | Priority | Title | Due Date | Checklist | Description |\n`;
+    md += `|---|---|---|---|---|---|\n`;
 
     tasks.forEach((task) => {
         const check = task.status === 'Done' ? '[x]' : '[ ]';
         const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-';
         const desc = (task.description || '').replace(/\r?\n/g, ' ');
-        md += `| ${check} ${task.status} | ${task.priority} | **${task.title}** | ${due} | ${desc} |\n`;
+        const subtasks = task.subtasks || [];
+        const completedSubs = subtasks.filter((s) => s.isCompleted).length;
+        const subtaskSummary = subtasks.length > 0 ? `${completedSubs}/${subtasks.length}` : '-';
+
+        md += `| ${check} ${task.status} | ${task.priority} | **${task.title}** | ${due} | ${subtaskSummary} | ${desc} |\n`;
     });
+
+    // Detailed checklist breakout
+    const tasksWithSubtasks = tasks.filter((t) => t.subtasks && t.subtasks.length > 0);
+    if (tasksWithSubtasks.length > 0) {
+        md += `\n## Subtasks Breakout\n\n`;
+        tasksWithSubtasks.forEach((t) => {
+            md += `### ${t.title} (${t.status})\n`;
+            t.subtasks?.forEach((st) => {
+                md += `- [${st.isCompleted ? 'x' : ' '}] ${st.title}\n`;
+            });
+            md += `\n`;
+        });
+    }
 
     const filename = customFilename || `tasks_export_${dateStr}.md`;
     downloadFile(md, filename, 'text/markdown;charset=utf-8;');
@@ -133,9 +159,19 @@ export const printTasksSummary = (tasks: Task[], title: string = 'Tasks Summary 
 
     const rowsHtml = tasks
         .map(
-            (t, index) => `
+            (t, index) => {
+                const subtasks = t.subtasks || [];
+                const doneSubs = subtasks.filter((s) => s.isCompleted).length;
+                const subtaskHtml = subtasks.length > 0 
+                    ? `<div style="margin-top:4px; font-size:11px; color:#4b5563; background:#f3f4f6; padding:2px 6px; border-radius:4px; display:inline-block;">Checklist: ${doneSubs}/${subtasks.length} done</div>`
+                    : '';
+
+                return `
         <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 1 ? 'background-color: #f9fafb;' : ''}">
-            <td style="padding: 10px 12px; font-weight: 600; color: #111827;">${t.title}</td>
+            <td style="padding: 10px 12px; font-weight: 600; color: #111827;">
+                ${t.title}
+                ${subtaskHtml}
+            </td>
             <td style="padding: 10px 12px; color: #4b5563; font-size: 13px;">${t.description || '<span style="color:#9ca3af">—</span>'}</td>
             <td style="padding: 10px 12px; text-align: center;">
                 <span style="display:inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 9999px; ${statusBadge(t.status)}">${t.status}</span>
@@ -146,7 +182,8 @@ export const printTasksSummary = (tasks: Task[], title: string = 'Tasks Summary 
             <td style="padding: 10px 12px; color: #4b5563; font-size: 13px; text-align: right;">
                 ${t.dueDate ? new Date(t.dueDate).toLocaleDateString() : '—'}
             </td>
-        </tr>`
+        </tr>`;
+            }
         )
         .join('');
 

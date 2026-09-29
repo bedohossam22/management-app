@@ -4,6 +4,7 @@ import {
     getTaskById,
     createTask,
     updateTask,
+    toggleSubtask,
     deleteTask,
 } from '../controllers/taskController';
 import { createTaskValidation, updateTaskValidation } from '../validators/taskValidator';
@@ -18,6 +19,7 @@ router.get('/', getTasks);
 router.get('/:id', getTaskById);
 router.post('/', createTaskValidation, createTask);
 router.put('/:id', updateTaskValidation, updateTask);
+router.patch('/:id/subtasks/:subtaskId/toggle', toggleSubtask);
 router.delete('/:id', deleteTask);
 
 export default router;

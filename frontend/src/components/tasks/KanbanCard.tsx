@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Task } from '../../types';
 import { formatDate, getPriorityBadgeClass } from '../../utils/helpers';
 
@@ -8,6 +8,7 @@ interface KanbanCardProps {
     onDelete: (id: string) => void;
     onStatusChange: (id: string, status: Task['status']) => void;
     onDuplicate?: (task: Task) => void;
+    onToggleSubtask?: (taskId: string, subtaskId?: string, index?: number) => void;
     isDragging?: boolean;
     onDragStart: (e: React.DragEvent<HTMLDivElement>, task: Task) => void;
     onDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -19,10 +20,18 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     onDelete,
     onStatusChange,
     onDuplicate,
+    onToggleSubtask,
     isDragging,
     onDragStart,
     onDragEnd,
 }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const subtasks = task.subtasks || [];
+    const totalSubtasks = subtasks.length;
+    const completedSubtasks = subtasks.filter((s) => s.isCompleted).length;
+    const progressPercent = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
+
     // Due date urgency calculation
     const getDueDateBadge = () => {
         if (!task.dueDate) return null;
@@ -136,15 +145,80 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             </div>
 
             {/* Task Title */}
-            <h4 className="font-semibold text-gray-900 text-sm mb-1.5 leading-snug line-clamp-2">
+            <h4
+                className="font-semibold text-gray-900 text-sm mb-1.5 leading-snug line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => onEdit(task)}
+            >
                 {task.title}
             </h4>
 
             {/* Task Description */}
             {task.description && (
-                <p className="text-gray-500 text-xs line-clamp-2 mb-3 leading-relaxed">
+                <p className="text-gray-500 text-xs line-clamp-2 mb-2.5 leading-relaxed">
                     {task.description}
                 </p>
+            )}
+
+            {/* Subtasks summary in Kanban Card */}
+            {totalSubtasks > 0 && (
+                <div className="mb-2.5 bg-gray-50 rounded-lg p-2 border border-gray-100">
+                    <div className="flex items-center justify-between mb-1">
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsExpanded(!isExpanded);
+                            }}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+                        >
+                            <svg
+                                className={`w-3 h-3 text-gray-400 transition-transform ${isExpanded ? 'rotate-90 text-blue-600' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                            <span>Checklist ({completedSubtasks}/{totalSubtasks})</span>
+                        </button>
+                        <span className="text-[10px] font-bold text-gray-500">{progressPercent}%</span>
+                    </div>
+
+                    <div className="w-full bg-gray-200 rounded-full h-1 overflow-hidden">
+                        <div
+                            className={`h-1 rounded-full transition-all duration-300 ${
+                                progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-600'
+                            }`}
+                            style={{ width: `${progressPercent}%` }}
+                        ></div>
+                    </div>
+
+                    {isExpanded && (
+                        <div className="mt-2 pt-1.5 border-t border-gray-200/60 space-y-1">
+                            {subtasks.map((sub, idx) => (
+                                <label
+                                    key={sub._id || sub.id || idx}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-1.5 text-[11px] text-gray-700 hover:bg-gray-100 p-0.5 rounded cursor-pointer"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={sub.isCompleted}
+                                        onChange={() => {
+                                            if (onToggleSubtask) {
+                                                onToggleSubtask(task._id, sub._id, idx);
+                                            }
+                                        }}
+                                        className="w-3 h-3 text-blue-600 rounded focus:ring-blue-500 accent-blue-600 cursor-pointer"
+                                    />
+                                    <span className={sub.isCompleted ? 'line-through text-gray-400' : 'font-medium text-gray-700'}>
+                                        {sub.title}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
             )}
 
             {/* Due date info */}
@@ -161,7 +235,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                                 e.stopPropagation();
                                 onStatusChange(task._id, 'To Do');
                             }}
-                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors"
+                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors cursor-pointer"
                             title="Move back to To Do"
                         >
                             To Do
@@ -174,7 +248,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                                 e.stopPropagation();
                                 onStatusChange(task._id, 'In Progress');
                             }}
-                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors"
+                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors cursor-pointer"
                             title="Move to In Progress"
                         >
                             In Progress
@@ -187,7 +261,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                                 e.stopPropagation();
                                 onStatusChange(task._id, 'Done');
                             }}
-                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors flex items-center gap-0.5"
+                            className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors flex items-center gap-0.5 cursor-pointer"
                             title="Mark as Done"
                         >
                             <span>✓</span> Done

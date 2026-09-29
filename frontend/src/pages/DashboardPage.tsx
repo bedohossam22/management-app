@@ -201,6 +201,34 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleToggleSubtask = async (taskId: string, subtaskId?: string, index?: number) => {
+        try {
+            const targetTask = tasks.find((t) => t._id === taskId);
+            if (!targetTask || !targetTask.subtasks) return;
+
+            const updatedSubtasks = targetTask.subtasks.map((st, i) => {
+                if ((subtaskId && (st._id === subtaskId || st.id === subtaskId)) || (!subtaskId && i === index)) {
+                    return { ...st, isCompleted: !st.isCompleted };
+                }
+                return st;
+            });
+
+            // Optimistic update
+            setTasks((prev) =>
+                prev.map((t) => (t._id === taskId ? { ...t, subtasks: updatedSubtasks } : t))
+            );
+
+            if (subtaskId && subtaskId.length === 24) {
+                await api.patch(`/tasks/${taskId}/subtasks/${subtaskId}/toggle`);
+            } else {
+                await api.put(`/tasks/${taskId}`, { subtasks: updatedSubtasks });
+            }
+        } catch (err: any) {
+            fetchTasks();
+            toast.error(err.response?.data?.message || 'Failed to update subtask');
+        }
+    };
+
     const handleStatusChange = async (id: string, status: Task['status']) => {
         try {
             // Optimistic update
@@ -409,6 +437,7 @@ const DashboardPage: React.FC = () => {
                         onDelete={handleDeleteTask}
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
+                        onToggleSubtask={handleToggleSubtask}
                     />
                 ) : (
                     <KanbanBoard
@@ -418,6 +447,7 @@ const DashboardPage: React.FC = () => {
                         onDelete={handleDeleteTask}
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
+                        onToggleSubtask={handleToggleSubtask}
                         onAddTask={(status) => handleOpenCreate(status || 'To Do')}
                     />
                 )}

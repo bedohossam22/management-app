@@ -6,6 +6,14 @@ export interface User {
     token: string;
 }
 
+// Subtask types
+export interface Subtask {
+    _id?: string;
+    id?: string;
+    title: string;
+    isCompleted: boolean;
+}
+
 // Task types
 export interface Task {
     _id: string;
@@ -14,6 +22,7 @@ export interface Task {
     status: 'To Do' | 'In Progress' | 'Done';
     priority: 'Low' | 'Medium' | 'High';
     dueDate: string;
+    subtasks?: Subtask[];
     user: string;
     createdAt: string;
     updatedAt: string;
@@ -48,6 +57,7 @@ export interface TaskFormData {
     status: 'To Do' | 'In Progress' | 'Done';
     priority: 'Low' | 'Medium' | 'High';
     dueDate: string;
+    subtasks?: Subtask[];
 }
 
 // API Response
