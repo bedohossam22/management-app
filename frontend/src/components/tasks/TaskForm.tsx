@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { Task, TaskFormData, Subtask } from '../../types';
+import type { Task, TaskFormData, Subtask, Note } from '../../types';
+import TaskNotes from './TaskNotes';
 
 interface TaskFormProps {
     initialData?: Task | null;
@@ -8,15 +9,17 @@ interface TaskFormProps {
     onSubmit: (formData: TaskFormData) => Promise<void>;
     onCancel: () => void;
     isOpen: boolean;
+    onTaskUpdate?: (task: Task) => void;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, defaultDueDate, onSubmit, onCancel, isOpen }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, defaultDueDate, onSubmit, onCancel, isOpen, onTaskUpdate }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState<Task['status']>('To Do');
     const [priority, setPriority] = useState<Task['priority']>('Medium');
     const [dueDate, setDueDate] = useState('');
     const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+    const [notes, setNotes] = useState<Note[]>([]);
     const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -28,6 +31,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
             setPriority(initialData.priority);
             setDueDate(initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '');
             setSubtasks(Array.isArray(initialData.subtasks) ? [...initialData.subtasks] : []);
+            setNotes(Array.isArray(initialData.notes) ? [...initialData.notes] : []);
         } else {
             setTitle('');
             setDescription('');
@@ -35,6 +39,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
             setPriority('Medium');
             setDueDate(defaultDueDate || new Date().toISOString().split('T')[0]);
             setSubtasks([]);
+            setNotes([]);
         }
         setNewSubtaskTitle('');
     }, [initialData, defaultStatus, defaultDueDate, isOpen]);
@@ -301,6 +306,20 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
                             </div>
                         )}
                     </div>
+
+                    {/* Activity Log / Notes Section — only for existing tasks */}
+                    {initialData && initialData._id && (
+                        <TaskNotes
+                            taskId={initialData._id}
+                            notes={notes}
+                            onNotesUpdate={(updatedNotes) => {
+                                setNotes(updatedNotes);
+                                if (onTaskUpdate && initialData) {
+                                    onTaskUpdate({ ...initialData, notes: updatedNotes });
+                                }
+                            }}
+                        />
+                    )}
 
                     <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
                         <button

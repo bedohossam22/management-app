@@ -275,3 +275,107 @@ export const deleteTask = async (req: Request, res: Response) => {
         });
     }
 };
+
+// Add Note to Task
+export const addNote = async (req: Request, res: Response) => {
+    try {
+        const { content } = req.body;
+
+        if (!content || typeof content !== 'string' || !content.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Note content is required',
+            });
+        }
+
+        if (content.length > 1000) {
+            return res.status(400).json({
+                success: false,
+                message: 'Note cannot exceed 1000 characters',
+            });
+        }
+
+        const task = await Task.findOne({
+            _id: req.params.id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        task.notes.push({ content: content.trim() } as any);
+        await task.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Note added successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+        console.error('Add note error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error adding note',
+        });
+    }
+};
+
+// Delete Note from Task
+export const deleteNote = async (req: Request, res: Response) => {
+    try {
+        const { id, noteId } = req.params;
+        const task = await Task.findOne({
+            _id: id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        const noteIndex = task.notes.findIndex(
+            (n: any) => n._id?.toString() === noteId
+        );
+
+        if (noteIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                message: 'Note not found',
+            });
+        }
+
+        task.notes.splice(noteIndex, 1);
+        await task.save();
+
+        res.json({
+            success: true,
+            message: 'Note deleted successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+        console.error('Delete note error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting note',
+        });
+    }
+};

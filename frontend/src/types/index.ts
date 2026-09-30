@@ -14,6 +14,13 @@ export interface Subtask {
     isCompleted: boolean;
 }
 
+// Note types
+export interface Note {
+    _id: string;
+    content: string;
+    createdAt: string;
+}
+
 // Task types
 export interface Task {
     _id: string;
@@ -23,6 +30,7 @@ export interface Task {
     priority: 'Low' | 'Medium' | 'High';
     dueDate: string;
     subtasks?: Subtask[];
+    notes?: Note[];
     user: string;
     createdAt: string;
     updatedAt: string;

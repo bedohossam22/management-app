@@ -462,6 +462,11 @@ const DashboardPage: React.FC = () => {
                     setIsFormOpen(false);
                     setEditingTask(null);
                 }}
+                onTaskUpdate={(updatedTask) => {
+                    setTasks((prev) =>
+                        prev.map((t) => (t._id === updatedTask._id ? { ...t, ...updatedTask } : t))
+                    );
+                }}
             />
 
             <KeyboardShortcutsModal

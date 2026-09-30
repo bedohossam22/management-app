@@ -222,7 +222,17 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             )}
 
             {/* Due date info */}
-            <div className="mb-3">{getDueDateBadge()}</div>
+            <div className="mb-3 flex items-center gap-2 flex-wrap">
+                {getDueDateBadge()}
+                {task.notes && task.notes.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 font-medium" title={`${task.notes.length} note${task.notes.length === 1 ? '' : 's'}`}>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        {task.notes.length}
+                    </span>
+                )}
+            </div>
 
             {/* Quick Stage Transitions Footer */}
             <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs">

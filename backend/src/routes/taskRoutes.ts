@@ -6,6 +6,8 @@ import {
     updateTask,
     toggleSubtask,
     deleteTask,
+    addNote,
+    deleteNote,
 } from '../controllers/taskController';
 import { createTaskValidation, updateTaskValidation } from '../validators/taskValidator';
 import { auth } from '../middleware/auth';
@@ -21,5 +23,9 @@ router.post('/', createTaskValidation, createTask);
 router.put('/:id', updateTaskValidation, updateTask);
 router.patch('/:id/subtasks/:subtaskId/toggle', toggleSubtask);
 router.delete('/:id', deleteTask);
+
+// Notes routes
+router.post('/:id/notes', addNote);
+router.delete('/:id/notes/:noteId', deleteNote);
 
 export default router;

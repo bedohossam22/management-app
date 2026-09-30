@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
+// Define note interface
+export interface INote {
+    _id?: mongoose.Types.ObjectId;
+    content: string;
+    createdAt?: Date;
+}
+
 // Define subtask interface
 export interface ISubtask {
     _id?: mongoose.Types.ObjectId;
@@ -15,6 +22,7 @@ export interface ITask extends Document {
     priority: 'Low' | 'Medium' | 'High';
     dueDate: Date;
     subtasks: ISubtask[];
+    notes: INote[];
     user: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
@@ -35,6 +43,19 @@ const subtaskSchema = new Schema(
         },
     },
     { _id: true }
+);
+
+// Note Schema
+const noteSchema = new Schema(
+    {
+        content: {
+            type: String,
+            required: [true, 'Note content is required'],
+            trim: true,
+            maxlength: [1000, 'Note cannot exceed 1000 characters'],
+        },
+    },
+    { _id: true, timestamps: { createdAt: true, updatedAt: false } }
 );
 
 // Task Schema 
@@ -67,6 +88,10 @@ const taskSchema = new Schema<ITask>(
         },
         subtasks: {
             type: [subtaskSchema],
+            default: [],
+        },
+        notes: {
+            type: [noteSchema],
             default: [],
         },
         user: {
