@@ -1,4 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/forms";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Custom global styles or overrides can be placed below if needed */
