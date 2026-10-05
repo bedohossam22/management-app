@@ -111,10 +111,15 @@ const DashboardPage: React.FC = () => {
             if (e.key === '?' || (e.shiftKey && e.key === '/')) {
                 e.preventDefault();
                 setIsShortcutsOpen((prev) => !prev);
-            } else if (e.key === 'n' || e.key === 'N' || e.key === 'c' || e.key === 'C') {
+            } else if (e.key === 'n' || e.key === 'N') {
                 if (!isFormOpen && !isShortcutsOpen) {
                     e.preventDefault();
                     handleOpenCreate('To Do');
+                }
+            } else if (e.key === 'c' || e.key === 'C') {
+                if (!isFormOpen && !isShortcutsOpen) {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('open-coffee-bar'));
                 }
             } else if (e.key === '/') {
                 e.preventDefault();

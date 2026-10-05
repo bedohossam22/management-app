@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useCoffee } from '../../context/CoffeeContext';
+import { COFFEE_MENU_ITEMS } from '../../data/coffeeMenu';
 import { exportTasksToCSV, exportTasksToJSON } from '../../utils/exportTasks';
 import { formatDate, getStatusBadgeClass } from '../../utils/helpers';
 import type { Task } from '../../types';
@@ -16,7 +18,7 @@ interface CommandPaletteProps {
 
 interface PaletteItem {
     id: string;
-    category: 'Actions' | 'Navigation' | 'Tasks';
+    category: 'Actions' | 'Navigation' | 'Tasks' | 'Coffee & Fuel';
     title: string;
     subtitle?: string;
     icon?: React.ReactNode;
@@ -40,6 +42,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     const listRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { logout } = useAuth();
+    const { openCoffeeBar, startBrewing } = useCoffee();
 
     // Fetch tasks when opened
     useEffect(() => {
@@ -170,6 +173,19 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         // 2. Action items
         const actionItems: PaletteItem[] = [
             {
+                id: 'act-coffee-bar',
+                category: 'Actions',
+                title: 'Open Coffee & Fuel Bar',
+                subtitle: 'Order artisan espresso, refreshers, snacks, or send kudos to team',
+                icon: <span className="text-base">☕</span>,
+                badge: 'Hot key: C',
+                badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+                action: () => {
+                    onClose();
+                    openCoffeeBar();
+                },
+            },
+            {
                 id: 'act-new-task',
                 category: 'Actions',
                 title: 'Create New Task',
@@ -235,7 +251,28 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
             },
         ];
 
-        // 3. Matched Tasks
+        // 3. Coffee & Fuel items
+        const coffeeItems: PaletteItem[] = COFFEE_MENU_ITEMS.map((c) => ({
+            id: `coffee-${c.id}`,
+            category: 'Coffee & Fuel',
+            title: `Brew ${c.name}`,
+            subtitle: `${c.description} • ${c.managerPerk}`,
+            icon: <span className="text-base">{c.icon}</span>,
+            badge: `${c.price} • ${c.caffeineMg}mg`,
+            badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+            action: () => {
+                onClose();
+                startBrewing(c, {
+                    size: 'Grande',
+                    milk: c.category === 'snacks' ? 'No Milk' : 'Oat Milk',
+                    sugar: '25% (Slight)',
+                    extraShots: 'None',
+                    temperature: c.category === 'iced' ? 'Iced' : 'Hot',
+                });
+            },
+        }));
+
+        // 4. Matched Tasks
         const taskItems: PaletteItem[] = tasks.map((task) => ({
             id: `task-${task._id}`,
             category: 'Tasks',
@@ -256,8 +293,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         }));
 
         if (!q) {
-            // Default view when query is empty: Actions, Nav, and top 5 recent tasks
-            return [...actionItems, ...navItems, ...taskItems.slice(0, 5)];
+            // Default view when query is empty: Actions, Nav, top coffee, and top 5 recent tasks
+            return [...actionItems, ...coffeeItems.slice(0, 3), ...navItems, ...taskItems.slice(0, 5)];
         }
 
         const filteredNav = navItems.filter(
@@ -266,6 +303,12 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
         const filteredActions = actionItems.filter(
             (i) => i.title.toLowerCase().includes(q) || (i.subtitle && i.subtitle.toLowerCase().includes(q))
         );
+        const filteredCoffee = coffeeItems.filter(
+            (i) =>
+                i.title.toLowerCase().includes(q) ||
+                (i.subtitle && i.subtitle.toLowerCase().includes(q)) ||
+                (i.badge && i.badge.toLowerCase().includes(q))
+        );
         const filteredTasks = taskItems.filter(
             (i) =>
                 i.title.toLowerCase().includes(q) ||
@@ -273,8 +316,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                 (i.badge && i.badge.toLowerCase().includes(q))
         );
 
-        return [...filteredTasks, ...filteredActions, ...filteredNav];
-    }, [query, tasks, navigate, onClose, logout, handleCreateTask, handleExportCSV, handleExportJSON, handleOpenShortcutsGuide]);
+        return [...filteredCoffee, ...filteredTasks, ...filteredActions, ...filteredNav];
+    }, [query, tasks, navigate, onClose, logout, handleCreateTask, handleExportCSV, handleExportJSON, handleOpenShortcutsGuide, openCoffeeBar, startBrewing]);
 
     // Keyboard navigation within list
     useEffect(() => {

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import CommandPalette from './CommandPalette';
 import ThemeToggle from './ThemeToggle';
+import CoffeeTriggerButton from '../coffee/CoffeeTriggerButton';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -36,7 +37,7 @@ const Navbar = () => {
 
     return (
         <>
-            <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+            <nav className="bg-white dark:bg-stone-900 shadow-sm border-b border-gray-200 dark:border-stone-800 sticky top-0 z-30 transition-colors">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Brand & Nav items */}
@@ -47,7 +48,7 @@ const Navbar = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
-                                <span className="text-lg font-bold text-gray-900 tracking-tight">Task Manager</span>
+                                <span className="text-lg font-bold text-gray-900 dark:text-stone-100 tracking-tight">Task Manager</span>
                             </NavLink>
 
                             <div className="flex items-center space-x-1">
@@ -57,8 +58,8 @@ const Navbar = () => {
                                     className={({ isActive }) =>
                                         `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
                                             isActive
-                                                ? 'bg-blue-50 text-blue-700 font-semibold'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
+                                                : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
                                         }`
                                     }
                                 >
@@ -73,8 +74,8 @@ const Navbar = () => {
                                     className={({ isActive }) =>
                                         `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
                                             isActive
-                                                ? 'bg-blue-50 text-blue-700 font-semibold'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
+                                                : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
                                         }`
                                     }
                                 >
@@ -89,8 +90,8 @@ const Navbar = () => {
                                     className={({ isActive }) =>
                                         `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
                                             isActive
-                                                ? 'bg-blue-50 text-blue-700 font-semibold'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
+                                                : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
                                         }`
                                     }
                                 >
@@ -107,7 +108,7 @@ const Navbar = () => {
                             <button
                                 type="button"
                                 onClick={() => setIsPaletteOpen(true)}
-                                className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-700 border border-gray-200 rounded-lg shadow-2xs transition-all cursor-pointer group"
+                                className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-gray-500 dark:text-stone-400 bg-gray-50 dark:bg-stone-800 hover:bg-gray-100 dark:hover:bg-stone-750 hover:text-gray-700 dark:hover:text-stone-200 border border-gray-200 dark:border-stone-700 rounded-lg shadow-2xs transition-all cursor-pointer group"
                             >
                                 <div className="flex items-center space-x-2">
                                     <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +116,7 @@ const Navbar = () => {
                                     </svg>
                                     <span>Quick Search & Commands...</span>
                                 </div>
-                                <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-white border border-gray-200 rounded shadow-2xs">
+                                <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-gray-400 dark:text-stone-400 bg-white dark:bg-stone-900 border border-gray-200 dark:border-stone-700 rounded shadow-2xs">
                                     Ctrl K
                                 </kbd>
                             </button>
@@ -123,10 +124,13 @@ const Navbar = () => {
 
                         {/* User profile & actions */}
                         <div className="flex items-center space-x-2 sm:space-x-3">
+                            {/* Coffee Bar trigger */}
+                            <CoffeeTriggerButton />
+
                             <button
                                 type="button"
                                 onClick={() => setIsPaletteOpen(true)}
-                                className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                                className="md:hidden p-2 text-gray-500 dark:text-stone-400 hover:text-gray-700 dark:hover:text-stone-200 hover:bg-gray-100 dark:hover:bg-stone-800 rounded-lg transition-colors cursor-pointer"
                                 title="Search (Ctrl+K)"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,14 +140,14 @@ const Navbar = () => {
 
                             <ThemeToggle />
 
-                            <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                            <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-stone-300 bg-gray-50 dark:bg-stone-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-stone-700">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                                <span className="font-medium text-gray-800">{user?.name}</span>
+                                <span className="font-medium text-gray-800 dark:text-stone-200">{user?.name}</span>
                             </div>
 
                             <button
                                 onClick={handleLogout}
-                                className="px-3.5 py-1.5 text-xs sm:text-sm font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
+                                className="px-3.5 py-1.5 text-xs sm:text-sm font-medium text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
