@@ -23,6 +23,13 @@ export interface CoffeeMenuItem {
     recommendedFor: string;
 }
 
+export interface CoffeeDiscount {
+    code: string;
+    discountPercent: number;
+    description: string;
+    badge?: string;
+}
+
 export interface CoffeeCustomization {
     size: DrinkSize;
     milk: MilkOption;
@@ -32,6 +39,9 @@ export interface CoffeeCustomization {
     warmSnack?: boolean;
     specialNotes?: string;
     recipient?: string;
+    discountCode?: string;
+    discountPercent?: number;
+    finalPrice?: string;
 }
 
 export interface ActiveBrewingOrder {
@@ -53,6 +63,9 @@ export interface CompletedOrder {
     caffeineMg: number;
     recipient?: string;
     kudosMessage?: string;
+    discountCode?: string;
+    discountPercent?: number;
+    finalPrice?: string;
 }
 
 export interface CoffeeStats {

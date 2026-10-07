@@ -1,4 +1,4 @@
-import type { CoffeeMenuItem, TeamMember } from '../types/coffee';
+import type { CoffeeMenuItem, TeamMember, CoffeeDiscount } from '../types/coffee';
 
 export const COFFEE_MENU_ITEMS: CoffeeMenuItem[] = [
     // --- ESPRESSO & HOT BREWS ---
@@ -320,3 +320,81 @@ export const COFFEE_QUOTES: string[] = [
     'Decaf? In this sprint economy? Never.',
     'Latte art is just CSS that tastes delicious.',
 ];
+
+export const COFFEE_DISCOUNT_CODES: CoffeeDiscount[] = [
+    {
+        code: 'SPRINT100',
+        discountPercent: 100,
+        description: '100% OFF - Sprint Champion Pass (Free Coffee)',
+        badge: '⚡ 100% FREE',
+    },
+    {
+        code: 'FREECOFFEE',
+        discountPercent: 100,
+        description: '100% OFF - On the House Welcome Perk',
+        badge: '☕ 100% FREE',
+    },
+    {
+        code: 'MANAGERVIP',
+        discountPercent: 100,
+        description: '100% OFF - Executive Manager Unlimited Pass',
+        badge: '👑 VIP PASS',
+    },
+    {
+        code: 'BEDO50',
+        discountPercent: 50,
+        description: '50% OFF - Special Creator Discount',
+        badge: '🌟 50% OFF',
+    },
+    {
+        code: 'DEV20',
+        discountPercent: 20,
+        description: '20% OFF - Developer Crunch Fuel',
+        badge: '💻 20% OFF',
+    },
+    {
+        code: 'TGIF',
+        discountPercent: 30,
+        description: '30% OFF - Happy Friday Release Discount',
+        badge: '🎉 30% OFF',
+    },
+    {
+        code: 'STANDUP',
+        discountPercent: 15,
+        description: '15% OFF - Daily Standup Sync Discount',
+        badge: '⏱️ 15% OFF',
+    },
+];
+
+export function validateDiscountCode(rawCode: string): CoffeeDiscount | null {
+    if (!rawCode) return null;
+    const clean = rawCode.trim().toUpperCase();
+    return COFFEE_DISCOUNT_CODES.find((d) => d.code === clean) || null;
+}
+
+export function calculateDiscountedPrice(
+    rawPrice: string,
+    discountPercent: number = 0
+): {
+    originalPriceNum: number;
+    finalPriceNum: number;
+    originalFormatted: string;
+    finalFormatted: string;
+    discountAmountFormatted: string;
+    isFree: boolean;
+} {
+    // Remove '$' or any non-numeric characters except '.'
+    const numeric = parseFloat(rawPrice.replace(/[^0-9.]/g, '')) || 0;
+    const discountAmount = (numeric * Math.min(Math.max(discountPercent, 0), 100)) / 100;
+    const final = Math.max(numeric - discountAmount, 0);
+
+    return {
+        originalPriceNum: numeric,
+        finalPriceNum: final,
+        originalFormatted: `$${numeric.toFixed(2)}`,
+        finalFormatted: final === 0 ? '$0.00' : `$${final.toFixed(2)}`,
+        discountAmountFormatted: `-$${discountAmount.toFixed(2)}`,
+        isFree: final === 0,
+    };
+}
+

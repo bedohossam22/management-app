@@ -7,8 +7,14 @@ import type {
     SugarLevel,
     ExtraShot,
     Temperature,
+    CoffeeDiscount,
 } from '../../types/coffee';
-import { MOCK_TEAM_MEMBERS } from '../../data/coffeeMenu';
+import {
+    MOCK_TEAM_MEMBERS,
+    validateDiscountCode,
+    calculateDiscountedPrice,
+    COFFEE_DISCOUNT_CODES,
+} from '../../data/coffeeMenu';
 import { coffeeSound } from '../../utils/coffeeSounds';
 
 interface CoffeeCustomizerModalProps {
@@ -34,6 +40,11 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
     const [warmSnack, setWarmSnack] = useState(true);
     const [specialNotes, setSpecialNotes] = useState('');
 
+    // Discount code state
+    const [discountInput, setDiscountInput] = useState('');
+    const [appliedDiscount, setAppliedDiscount] = useState<CoffeeDiscount | null>(null);
+    const [discountError, setDiscountError] = useState<string | null>(null);
+
     // Send as Gift mode
     const [isGiftMode, setIsGiftMode] = useState(false);
     const [selectedMember, setSelectedMember] = useState(MOCK_TEAM_MEMBERS[0].name);
@@ -45,6 +56,9 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
         } else {
             setTemperature('Hot');
         }
+        setDiscountInput('');
+        setAppliedDiscount(null);
+        setDiscountError(null);
     }, [item]);
 
     if (!item) return null;
@@ -52,6 +66,36 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
     const calculatedCaffeine =
         item.caffeineMg +
         (extraShots === '+1 Turbo Shot' ? 65 : extraShots === '+2 Sprint Crunch Shots' ? 130 : 0);
+
+    const priceInfo = calculateDiscountedPrice(
+        item.price,
+        appliedDiscount ? appliedDiscount.discountPercent : 0
+    );
+
+    const handleApplyDiscount = (codeToApply?: string) => {
+        const target = (codeToApply ?? discountInput).trim();
+        if (!target) {
+            setDiscountError('Please enter a discount code');
+            return;
+        }
+
+        const match = validateDiscountCode(target);
+        if (match) {
+            coffeeSound.playClick();
+            setAppliedDiscount(match);
+            setDiscountInput(match.code);
+            setDiscountError(null);
+        } else {
+            setDiscountError('Invalid code. Try SPRINT100, BEDO50, or DEV20');
+        }
+    };
+
+    const handleRemoveDiscount = () => {
+        coffeeSound.playClick();
+        setAppliedDiscount(null);
+        setDiscountInput('');
+        setDiscountError(null);
+    };
 
     const handleConfirm = () => {
         coffeeSound.playClick();
@@ -64,6 +108,9 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
             warmSnack: isSnack ? warmSnack : undefined,
             specialNotes: specialNotes.trim() || undefined,
             recipient: isGiftMode ? selectedMember : undefined,
+            discountCode: appliedDiscount?.code,
+            discountPercent: appliedDiscount?.discountPercent,
+            finalPrice: priceInfo.finalFormatted,
         };
 
         onBrew(customization, isGiftMode ? kudosMessage : undefined);
@@ -89,9 +136,20 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
                                 <h3 className="text-xl font-bold tracking-tight text-amber-50">
                                     {item.name}
                                 </h3>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 font-semibold border border-amber-300/30">
-                                    {item.price}
-                                </span>
+                                {appliedDiscount ? (
+                                    <div className="flex items-center space-x-1.5">
+                                        <span className="text-xs px-1.5 py-0.5 rounded-md bg-black/40 text-amber-300/60 line-through">
+                                            {priceInfo.originalFormatted}
+                                        </span>
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 font-bold border border-emerald-400/40 animate-pulse">
+                                            {priceInfo.finalFormatted} ({appliedDiscount.badge || `${appliedDiscount.discountPercent}% OFF`})
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 font-semibold border border-amber-300/30">
+                                        {item.price}
+                                    </span>
+                                )}
                             </div>
                             <p className="text-xs text-amber-200/80 mt-0.5">{item.description}</p>
                             <p className="text-xs text-amber-300 font-medium mt-1">

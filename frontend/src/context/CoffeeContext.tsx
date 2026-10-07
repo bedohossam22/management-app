@@ -209,6 +209,9 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                         caffeineMg: item.caffeineMg + (customization.extraShots.includes('Turbo') ? 65 : customization.extraShots.includes('Sprint') ? 130 : 0),
                         recipient,
                         kudosMessage,
+                        discountCode: customization.discountCode,
+                        discountPercent: customization.discountPercent,
+                        finalPrice: customization.finalPrice,
                     };
 
                     setOrderHistory((prev) => [completed, ...prev].slice(0, 50));
