@@ -81,11 +81,12 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
 
         const match = validateDiscountCode(target);
         if (match) {
-            coffeeSound.playClick();
+            coffeeSound.playVoucherSuccess();
             setAppliedDiscount(match);
             setDiscountInput(match.code);
             setDiscountError(null);
         } else {
+            coffeeSound.playClick();
             setDiscountError('Invalid code. Try SPRINT100, BEDO50, or DEV20');
         }
     };
@@ -373,6 +374,100 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
                             placeholder="e.g. Extra cinnamon dust, double cup, extra hot..."
                             className="w-full text-xs px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                         />
+                    </div>
+
+                    {/* Voucher & Promo Code Section */}
+                    <div className="p-3.5 bg-gradient-to-r from-amber-500/10 via-amber-600/5 to-stone-500/10 dark:from-amber-950/40 dark:to-stone-900/60 rounded-xl border border-amber-300/50 dark:border-amber-700/50 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider flex items-center space-x-1.5">
+                                <span>🎟️ Promo Voucher & Team Perks</span>
+                            </label>
+                            {appliedDiscount && (
+                                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
+                                    <span>✓ Code Applied ({appliedDiscount.badge || `${appliedDiscount.discountPercent}% OFF`})</span>
+                                </span>
+                            )}
+                        </div>
+
+                        {appliedDiscount ? (
+                            <div className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-700/60">
+                                <div className="flex items-center space-x-2 text-xs">
+                                    <span className="text-base">🎉</span>
+                                    <div>
+                                        <p className="font-bold text-emerald-900 dark:text-emerald-200">
+                                            {appliedDiscount.code} &bull; {appliedDiscount.description}
+                                        </p>
+                                        <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium mt-0.5">
+                                            Original: <span className="line-through">{priceInfo.originalFormatted}</span> &rarr; Final Price:{' '}
+                                            <span className="font-bold">{priceInfo.finalFormatted}</span> ({priceInfo.discountAmountFormatted})
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveDiscount}
+                                    className="px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 bg-white dark:bg-stone-800 rounded-md border border-rose-200 dark:border-rose-900 shadow-2xs cursor-pointer hover:bg-rose-50"
+                                >
+                                    Remove ✕
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <input
+                                            type="text"
+                                            value={discountInput}
+                                            onChange={(e) => {
+                                                setDiscountInput(e.target.value.toUpperCase());
+                                                if (discountError) setDiscountError(null);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleApplyDiscount();
+                                                }
+                                            }}
+                                            placeholder="Enter promo code (e.g. SPRINT100)"
+                                            className="w-full text-xs uppercase font-mono px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleApplyDiscount()}
+                                        className="px-4 py-2 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition-colors cursor-pointer flex-shrink-0"
+                                    >
+                                        Apply Code
+                                    </button>
+                                </div>
+
+                                {discountError && (
+                                    <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                                        ⚠️ {discountError}
+                                    </p>
+                                )}
+
+                                {/* Quick Click Vouchers */}
+                                <div className="pt-1">
+                                    <p className="text-[10px] uppercase font-bold text-stone-500 dark:text-stone-400 mb-1">
+                                        Quick Sprint Perks:
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {COFFEE_DISCOUNT_CODES.slice(0, 4).map((promo) => (
+                                            <button
+                                                key={promo.code}
+                                                type="button"
+                                                onClick={() => handleApplyDiscount(promo.code)}
+                                                className="text-[10px] font-semibold px-2 py-1 rounded-md bg-white dark:bg-stone-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 transition-colors cursor-pointer flex items-center space-x-1 shadow-2xs"
+                                                title={promo.description}
+                                            >
+                                                <span>{promo.badge || promo.code}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Live Caffeine & Energy Indicator */}

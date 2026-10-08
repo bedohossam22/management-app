@@ -81,6 +81,11 @@ export const BrewingOverlay: React.FC = () => {
                             🌡️ {customization.temperature}
                         </span>
                     )}
+                    {customization.discountCode && (
+                        <span className="bg-emerald-950/90 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-600/50">
+                            🎟️ {customization.discountCode} ({customization.finalPrice})
+                        </span>
+                    )}
                 </div>
             </div>
         </div>

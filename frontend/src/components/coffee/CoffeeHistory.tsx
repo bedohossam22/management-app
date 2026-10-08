@@ -336,6 +336,11 @@ export const CoffeeHistory: React.FC = () => {
                                                         To: {order.recipient}
                                                     </span>
                                                 )}
+                                                {order.discountCode && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300/40">
+                                                        🎟️ {order.discountCode} ({order.finalPrice || `${order.discountPercent}% OFF`})
+                                                    </span>
+                                                )}
                                             </div>
                                             <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
                                                 {formattedDate} at {formattedTime} • {order.customization.milk} • {order.customization.sugar}

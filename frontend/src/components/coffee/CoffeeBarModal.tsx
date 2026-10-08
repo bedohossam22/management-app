@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCoffee } from '../../context/CoffeeContext';
-import { COFFEE_MENU_ITEMS, COFFEE_QUOTES } from '../../data/coffeeMenu';
+import { COFFEE_MENU_ITEMS, COFFEE_QUOTES, COFFEE_DISCOUNT_CODES } from '../../data/coffeeMenu';
 import type { CoffeeCategory, CoffeeMenuItem } from '../../types/coffee';
 import CoffeeCustomizerModal from './CoffeeCustomizerModal';
 import CoffeeRoulette from './CoffeeRoulette';
@@ -181,6 +181,32 @@ export const CoffeeBarModal: React.FC = () => {
                     <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
                         {activeTab === 'menu' && (
                             <>
+                                {/* Promo & Sprint Perks Banner */}
+                                <div className="p-3.5 bg-gradient-to-r from-amber-500/15 via-amber-600/10 to-emerald-500/10 dark:from-amber-950/40 dark:to-emerald-950/20 rounded-2xl border border-amber-300/40 dark:border-amber-700/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                                    <div className="flex items-center space-x-2.5">
+                                        <span className="text-xl p-1.5 bg-amber-500/20 rounded-xl">🎟️</span>
+                                        <div>
+                                            <p className="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center space-x-1.5">
+                                                <span>Manager Sprint Fuel Perks</span>
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold border border-emerald-500/30">Active</span>
+                                            </p>
+                                            <p className="text-[11px] text-stone-600 dark:text-stone-300 mt-0.5">
+                                                Use promo code <span className="font-mono font-bold bg-amber-200/60 dark:bg-amber-800/60 text-amber-900 dark:text-amber-100 px-1.5 py-0.2 rounded">SPRINT100</span> for 100% free coffee or <span className="font-mono font-bold bg-amber-200/60 dark:bg-amber-800/60 text-amber-900 dark:text-amber-100 px-1.5 py-0.2 rounded">BEDO50</span> for 50% off in customizer!
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-1.5 self-end sm:self-center">
+                                        {COFFEE_DISCOUNT_CODES.slice(0, 3).map((code) => (
+                                            <span
+                                                key={code.code}
+                                                className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-lg bg-white dark:bg-stone-800 border border-amber-200 dark:border-stone-700 text-amber-800 dark:text-amber-300 shadow-2xs"
+                                            >
+                                                {code.code}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {/* Search & Category Pills */}
                                 <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
                                     {/* Category selector */}
