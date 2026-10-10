@@ -336,6 +336,11 @@ export const CoffeeHistory: React.FC = () => {
                                                         To: {order.recipient}
                                                     </span>
                                                 )}
+                                                {order.customization.latteArt && order.customization.latteArt !== 'None' && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-750 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-800/50">
+                                                        🎨 {order.customization.latteArt}
+                                                    </span>
+                                                )}
                                                 {order.discountCode && (
                                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300/40">
                                                         🎟️ {order.discountCode} ({order.finalPrice || `${order.discountPercent}% OFF`})
@@ -345,6 +350,7 @@ export const CoffeeHistory: React.FC = () => {
                                             <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
                                                 {formattedDate} at {formattedTime} • {order.customization.milk} • {order.customization.sugar}
                                                 {order.customization.extraShots !== 'None' && ` • ${order.customization.extraShots}`}
+                                                {order.customization.specialNotes && ` • ✨ ${order.customization.specialNotes}`}
                                             </p>
                                             {order.kudosMessage && (
                                                 <p className="text-[11px] text-amber-600 dark:text-amber-400 italic mt-0.5">

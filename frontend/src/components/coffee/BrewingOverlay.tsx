@@ -81,6 +81,16 @@ export const BrewingOverlay: React.FC = () => {
                             🌡️ {customization.temperature}
                         </span>
                     )}
+                    {customization.latteArt && customization.latteArt !== 'None' && (
+                        <span className="bg-amber-950/80 text-amber-200 px-2 py-0.5 rounded border border-amber-500/40">
+                            🎨 {customization.latteArt} Art
+                        </span>
+                    )}
+                    {customization.specialNotes && (
+                        <span className="bg-amber-950/80 text-amber-200/90 px-2 py-0.5 rounded border border-amber-700/40 truncate max-w-[200px]" title={customization.specialNotes}>
+                            ✨ {customization.specialNotes}
+                        </span>
+                    )}
                     {customization.discountCode && (
                         <span className="bg-emerald-950/90 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-600/50">
                             🎟️ {customization.discountCode} ({customization.finalPrice})

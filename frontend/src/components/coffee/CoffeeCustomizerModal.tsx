@@ -37,8 +37,18 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
     const [temperature, setTemperature] = useState<Temperature>(
         item?.category === 'iced' ? 'Iced' : 'Hot'
     );
+    const [latteArt, setLatteArt] = useState<string>('❤️ Heart');
     const [warmSnack, setWarmSnack] = useState(true);
     const [specialNotes, setSpecialNotes] = useState('');
+
+    const QUICK_TOPPING_PRESETS = [
+        '🌿 Cinnamon Dust',
+        '🍫 Cocoa Drizzle',
+        '☁️ Extra Velvet Foam',
+        '🧊 Light Ice',
+        '🍯 Honey Drop',
+        '☕ Double Cup Sleeve',
+    ];
 
     // Discount code state
     const [discountInput, setDiscountInput] = useState('');
@@ -53,8 +63,13 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
     useEffect(() => {
         if (item?.category === 'iced') {
             setTemperature('Iced');
+            setLatteArt('None');
+        } else if (item?.category === 'snacks') {
+            setTemperature('Hot');
+            setLatteArt('None');
         } else {
             setTemperature('Hot');
+            setLatteArt('❤️ Heart');
         }
         setDiscountInput('');
         setAppliedDiscount(null);
@@ -98,6 +113,20 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
         setDiscountError(null);
     };
 
+    const toggleToppingTag = (tag: string) => {
+        coffeeSound.playClick();
+        if (specialNotes.includes(tag)) {
+            const updated = specialNotes
+                .replace(tag, '')
+                .replace(/,\s*,/g, ',')
+                .replace(/^[\s,]+|[\s,]+$/g, '')
+                .trim();
+            setSpecialNotes(updated);
+        } else {
+            setSpecialNotes(specialNotes.trim() ? `${specialNotes.trim()}, ${tag}` : tag);
+        }
+    };
+
     const handleConfirm = () => {
         coffeeSound.playClick();
         const customization: CoffeeCustomization = {
@@ -107,6 +136,7 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
             extraShots: isSnack ? 'None' : extraShots,
             temperature: isSnack ? 'Hot' : temperature,
             warmSnack: isSnack ? warmSnack : undefined,
+            latteArt: !isSnack && latteArt !== 'None' ? latteArt : undefined,
             specialNotes: specialNotes.trim() || undefined,
             recipient: isGiftMode ? selectedMember : undefined,
             discountCode: appliedDiscount?.code,
@@ -339,6 +369,33 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
                                     </select>
                                 </div>
                             </div>
+
+                            {/* Barista Foam Art Choice */}
+                            <div>
+                                <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                    <span>🎨 Barista Latte Art</span>
+                                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">✨ Barista Touch</span>
+                                </label>
+                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                    {['❤️ Heart', '🌿 Rosette', '⚡ Bolt', '⭐ Star', '🐱 Cat', 'None'].map((art) => (
+                                        <button
+                                            key={art}
+                                            type="button"
+                                            onClick={() => {
+                                                coffeeSound.playClick();
+                                                setLatteArt(art);
+                                            }}
+                                            className={`py-1.5 px-1 text-center rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                                                latteArt === art
+                                                    ? 'bg-amber-700 text-white border-amber-700 shadow-xs'
+                                                    : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-300'
+                                            }`}
+                                        >
+                                            {art}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </>
                     ) : (
                         /* Snack specific settings */
@@ -362,11 +419,16 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
                         </div>
                     )}
 
-                    {/* Special Barista Instructions */}
+                    {/* Special Barista Instructions & Quick Topping Chips */}
                     <div>
-                        <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-1">
-                            Special Barista Instructions
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
+                                Special Barista Instructions
+                            </label>
+                            <span className="text-[10px] text-stone-500 dark:text-stone-400">
+                                Tap tags to quick-add
+                            </span>
+                        </div>
                         <input
                             type="text"
                             value={specialNotes}
@@ -374,6 +436,26 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
                             placeholder="e.g. Extra cinnamon dust, double cup, extra hot..."
                             className="w-full text-xs px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                         />
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                            {QUICK_TOPPING_PRESETS.map((preset) => {
+                                const isActive = specialNotes.includes(preset);
+                                return (
+                                    <button
+                                        key={preset}
+                                        type="button"
+                                        onClick={() => toggleToppingTag(preset)}
+                                        className={`text-[10px] px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center space-x-1 ${
+                                            isActive
+                                                ? 'bg-amber-600 text-white border-amber-600 font-semibold shadow-2xs'
+                                                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-400'
+                                        }`}
+                                    >
+                                        <span>{preset}</span>
+                                        <span>{isActive ? '✓' : '+'}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {/* Voucher & Promo Code Section */}

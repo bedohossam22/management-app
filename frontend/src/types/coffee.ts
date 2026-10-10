@@ -37,6 +37,7 @@ export interface CoffeeCustomization {
     extraShots: ExtraShot;
     temperature: Temperature;
     warmSnack?: boolean;
+    latteArt?: string;
     specialNotes?: string;
     recipient?: string;
     discountCode?: string;
