@@ -265,7 +265,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                 startBrewing(c, {
                     size: 'Grande',
                     milk: c.category === 'snacks' ? 'No Milk' : 'Oat Milk',
-                    sugar: '25% (Slight)',
+                    sugar: '50% (Standard)',
+                    sugarSpoons: c.category === 'snacks' ? 0 : 2,
+                    coffeeType: c.name,
                     extraShots: 'None',
                     temperature: c.category === 'iced' ? 'Iced' : 'Hot',
                 });

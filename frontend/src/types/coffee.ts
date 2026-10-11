@@ -30,10 +30,21 @@ export interface CoffeeDiscount {
     badge?: string;
 }
 
+export type CoffeeBeanType =
+    | 'Arabica Signature Blend'
+    | 'Robusta Turbo Roast'
+    | 'Colombian Supremo'
+    | 'Ethiopian Yirgacheffe'
+    | 'Turkish Sand Roast'
+    | 'Swiss Water Decaf'
+    | 'Blonde Light Roast';
+
 export interface CoffeeCustomization {
     size: DrinkSize;
     milk: MilkOption;
     sugar: SugarLevel;
+    sugarSpoons?: number;
+    coffeeType?: CoffeeBeanType | string;
     extraShots: ExtraShot;
     temperature: Temperature;
     warmSnack?: boolean;

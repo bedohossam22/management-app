@@ -336,6 +336,11 @@ export const CoffeeHistory: React.FC = () => {
                                                         To: {order.recipient}
                                                     </span>
                                                 )}
+                                                {order.customization.coffeeType && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 font-semibold border border-amber-300 dark:border-amber-700/50">
+                                                        🫘 {order.customization.coffeeType}
+                                                    </span>
+                                                )}
                                                 {order.customization.latteArt && order.customization.latteArt !== 'None' && (
                                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-750 dark:text-amber-300 font-medium border border-amber-200 dark:border-amber-800/50">
                                                         🎨 {order.customization.latteArt}
@@ -348,7 +353,7 @@ export const CoffeeHistory: React.FC = () => {
                                                 )}
                                             </div>
                                             <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
-                                                {formattedDate} at {formattedTime} • {order.customization.milk} • {order.customization.sugar}
+                                                {formattedDate} at {formattedTime} • {order.customization.milk} • {order.customization.sugarSpoons !== undefined ? `🥄 ${order.customization.sugarSpoons} ${order.customization.sugarSpoons === 1 ? 'spoon' : 'spoons'} sugar` : order.customization.sugar}
                                                 {order.customization.extraShots !== 'None' && ` • ${order.customization.extraShots}`}
                                                 {order.customization.specialNotes && ` • ✨ ${order.customization.specialNotes}`}
                                             </p>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MOCK_TEAM_MEMBERS, COFFEE_MENU_ITEMS } from '../../data/coffeeMenu';
-import type { CoffeeMenuItem } from '../../types/coffee';
+import { MOCK_TEAM_MEMBERS, COFFEE_MENU_ITEMS, COFFEE_BEAN_TYPES, SUGAR_SPOONS_OPTIONS } from '../../data/coffeeMenu';
+import type { CoffeeMenuItem, SugarLevel } from '../../types/coffee';
 import { coffeeSound } from '../../utils/coffeeSounds';
 import { useCoffee } from '../../context/CoffeeContext';
 
@@ -12,6 +12,8 @@ export const SendCoffeeModal: React.FC<SendCoffeeModalProps> = ({ onClose }) => 
     const { startBrewing } = useCoffee();
     const [selectedMember, setSelectedMember] = useState(MOCK_TEAM_MEMBERS[0]);
     const [selectedItem, setSelectedItem] = useState<CoffeeMenuItem>(COFFEE_MENU_ITEMS[0]);
+    const [sugarSpoons, setSugarSpoons] = useState(2);
+    const [coffeeType, setCoffeeType] = useState(COFFEE_BEAN_TYPES[0].name);
     const [message, setMessage] = useState('Awesome teamwork today! Enjoy a freshly brewed coffee ☕🚀');
 
     const QUICK_MESSAGES = [
@@ -23,12 +25,17 @@ export const SendCoffeeModal: React.FC<SendCoffeeModalProps> = ({ onClose }) => 
 
     const handleSend = () => {
         coffeeSound.playClick();
+        const matched = SUGAR_SPOONS_OPTIONS.find((s) => s.spoons === sugarSpoons);
+        const sugarLevel: SugarLevel = (matched?.percentageEquiv as SugarLevel) || '50% (Standard)';
+
         startBrewing(
             selectedItem,
             {
                 size: 'Grande',
                 milk: 'Oat Milk',
-                sugar: '25% (Slight)',
+                sugar: sugarLevel,
+                sugarSpoons,
+                coffeeType,
                 extraShots: 'None',
                 temperature: 'Hot',
                 recipient: selectedMember.name,
@@ -110,6 +117,48 @@ export const SendCoffeeModal: React.FC<SendCoffeeModalProps> = ({ onClose }) => 
                             <p className="text-[10px] opacity-80">{item.price}</p>
                         </button>
                     ))}
+                </div>
+            </div>
+
+            {/* Step 2.5: Coffee Type & Sugar Spoons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-amber-500/10 dark:bg-stone-800/60 rounded-xl border border-amber-300/40 dark:border-stone-700">
+                <div>
+                    <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                        ☕ Type of Coffee:
+                    </label>
+                    <select
+                        value={coffeeType}
+                        onChange={(e) => setCoffeeType(e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
+                    >
+                        {COFFEE_BEAN_TYPES.map((bt) => (
+                            <option key={bt.id} value={bt.name}>
+                                {bt.icon} {bt.name} ({bt.arabicName})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                        🥄 Sugar Spoons:
+                    </label>
+                    <div className="flex gap-1">
+                        {SUGAR_SPOONS_OPTIONS.map((opt) => (
+                            <button
+                                key={opt.spoons}
+                                type="button"
+                                onClick={() => setSugarSpoons(opt.spoons)}
+                                className={`flex-1 py-1 text-[11px] rounded-lg font-bold border transition-all cursor-pointer text-center ${
+                                    sugarSpoons === opt.spoons
+                                        ? 'bg-amber-600 text-white border-amber-600'
+                                        : 'bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-400'
+                                }`}
+                                title={`${opt.label} (${opt.arabicLabel})`}
+                            >
+                                {opt.spoons}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

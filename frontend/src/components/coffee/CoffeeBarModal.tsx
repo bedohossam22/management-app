@@ -63,7 +63,9 @@ export const CoffeeBarModal: React.FC = () => {
         startBrewing(item, {
             size: 'Grande',
             milk: item.category === 'snacks' ? 'No Milk' : 'Oat Milk',
-            sugar: '25% (Slight)',
+            sugar: '50% (Standard)',
+            sugarSpoons: item.category === 'snacks' ? 0 : 2,
+            coffeeType: item.name,
             extraShots: 'None',
             temperature: item.category === 'iced' ? 'Iced' : 'Hot',
         });

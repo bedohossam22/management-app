@@ -14,6 +14,8 @@ import {
     validateDiscountCode,
     calculateDiscountedPrice,
     COFFEE_DISCOUNT_CODES,
+    COFFEE_BEAN_TYPES,
+    SUGAR_SPOONS_OPTIONS,
 } from '../../data/coffeeMenu';
 import { coffeeSound } from '../../utils/coffeeSounds';
 
@@ -33,6 +35,8 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
     const [size, setSize] = useState<DrinkSize>('Grande');
     const [milk, setMilk] = useState<MilkOption>('Oat Milk');
     const [sugar, setSugar] = useState<SugarLevel>('25% (Slight)');
+    const [sugarSpoons, setSugarSpoons] = useState<number>(2);
+    const [coffeeType, setCoffeeType] = useState<string>('Arabica Signature Blend');
     const [extraShots, setExtraShots] = useState<ExtraShot>('None');
     const [temperature, setTemperature] = useState<Temperature>(
         item?.category === 'iced' ? 'Iced' : 'Hot'
@@ -133,6 +137,8 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
             size,
             milk: isSnack ? 'No Milk' : milk,
             sugar: isSnack ? '0% (Black)' : sugar,
+            sugarSpoons: isSnack ? 0 : sugarSpoons,
+            coffeeType: isSnack ? undefined : coffeeType,
             extraShots: isSnack ? 'None' : extraShots,
             temperature: isSnack ? 'Hot' : temperature,
             warmSnack: isSnack ? warmSnack : undefined,
@@ -271,6 +277,51 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
 
                     {!isSnack ? (
                         <>
+                            {/* Types of Coffee (Bean & Roast Selection) */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
+                                        ☕ Types of Coffee (نوع وتحميص القهوة)
+                                    </label>
+                                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                                        Selected: {coffeeType}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {COFFEE_BEAN_TYPES.map((type) => {
+                                        const isSelected = coffeeType === type.name;
+                                        return (
+                                            <button
+                                                key={type.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    coffeeSound.playClick();
+                                                    setCoffeeType(type.name);
+                                                }}
+                                                className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
+                                                    isSelected
+                                                        ? 'bg-amber-700 text-white border-amber-700 shadow-xs'
+                                                        : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-400'
+                                                }`}
+                                            >
+                                                <div className="flex items-center space-x-1.5">
+                                                    <span className="text-base">{type.icon}</span>
+                                                    <span className="text-xs font-bold truncate">{type.name}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between mt-1 text-[10px]">
+                                                    <span className={isSelected ? 'text-amber-200' : 'text-amber-700 dark:text-amber-300 font-medium'}>
+                                                        {type.arabicName}
+                                                    </span>
+                                                    <span className={isSelected ? 'text-amber-100/80' : 'text-stone-500 dark:text-stone-400'}>
+                                                        {type.roast}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
                             {/* Drink Size */}
                             <div>
                                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
@@ -336,38 +387,96 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
                                 </div>
                             </div>
 
-                            {/* Sweetness & Extra Turbo Shots */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Number of Sugar Spoons & Extra Turbo Shots */}
+                            <div className="p-3.5 rounded-2xl bg-amber-500/5 dark:bg-stone-800/60 border border-amber-300/40 dark:border-stone-700 space-y-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
-                                        Sweetness Level
-                                    </label>
-                                    <select
-                                        value={sugar}
-                                        onChange={(e) => setSugar(e.target.value as SugarLevel)}
-                                        className="w-full text-xs px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
-                                    >
-                                        <option value="0% (Black)">0% (Unsweetened / Black)</option>
-                                        <option value="25% (Slight)">25% (Slightly Sweet)</option>
-                                        <option value="50% (Standard)">50% (Standard Sweet)</option>
-                                        <option value="100% (Sweet)">100% (Extra Sweet)</option>
-                                    </select>
-                                </div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider flex items-center space-x-1.5">
+                                            <span>🥄 Number of Sugar Spoons (عدد معالق السكر)</span>
+                                        </label>
+                                        <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300">
+                                            {sugarSpoons} {sugarSpoons === 1 ? 'Spoon' : 'Spoons'} ({SUGAR_SPOONS_OPTIONS.find((s) => s.spoons === sugarSpoons)?.arabicLabel || 'مخصص'})
+                                        </span>
+                                    </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
-                                        Extra Espresso Booster
-                                    </label>
-                                    <select
-                                        value={extraShots}
-                                        onChange={(e) => setExtraShots(e.target.value as ExtraShot)}
-                                        className="w-full text-xs px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden font-medium"
-                                    >
-                                        <option value="None">Standard Strength</option>
-                                        <option value="+1 Turbo Shot">⚡ +1 Turbo Shot (+65mg caffeine)</option>
-                                        <option value="+2 Sprint Crunch Shots">🚀 +2 Sprint Crunch Shots (+130mg)</option>
-                                    </select>
+                                    {/* Stepper + Spoon chips */}
+                                    <div className="flex items-center space-x-2">
+                                        {/* Counter controls */}
+                                        <div className="inline-flex items-center bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl p-1 shadow-2xs">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    coffeeSound.playClick();
+                                                    const next = Math.max(0, sugarSpoons - 1);
+                                                    setSugarSpoons(next);
+                                                    const matched = SUGAR_SPOONS_OPTIONS.find((s) => s.spoons === next);
+                                                    if (matched) setSugar(matched.percentageEquiv as SugarLevel);
+                                                }}
+                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-bold text-xs cursor-pointer"
+                                                title="Decrease sugar spoons"
+                                            >
+                                                -
+                                            </button>
+                                            <div className="px-3 text-center min-w-[65px]">
+                                                <span className="text-xs font-black text-amber-900 dark:text-amber-200">
+                                                    🥄 {sugarSpoons}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    coffeeSound.playClick();
+                                                    const next = Math.min(8, sugarSpoons + 1);
+                                                    setSugarSpoons(next);
+                                                    const matched = SUGAR_SPOONS_OPTIONS.find((s) => s.spoons === next);
+                                                    if (matched) setSugar(matched.percentageEquiv as SugarLevel);
+                                                }}
+                                                className="w-7 h-7 flex items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-bold text-xs cursor-pointer"
+                                                title="Increase sugar spoons"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                        {/* Quick spoon presets */}
+                                        <div className="flex-1 flex flex-wrap gap-1">
+                                            {SUGAR_SPOONS_OPTIONS.map((opt) => (
+                                                <button
+                                                    key={opt.spoons}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        coffeeSound.playClick();
+                                                        setSugarSpoons(opt.spoons);
+                                                        setSugar(opt.percentageEquiv as SugarLevel);
+                                                    }}
+                                                    className={`px-2 py-1 text-[11px] rounded-lg font-semibold border transition-all cursor-pointer ${
+                                                        sugarSpoons === opt.spoons
+                                                            ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                                                            : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-400'
+                                                    }`}
+                                                >
+                                                    <span>{opt.spoons} ({opt.arabicLabel})</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+
+                            {/* Extra Espresso Booster */}
+                            <div>
+                                <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
+                                    Extra Espresso Booster
+                                </label>
+                                <select
+                                    value={extraShots}
+                                    onChange={(e) => setExtraShots(e.target.value as ExtraShot)}
+                                    className="w-full text-xs px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden font-medium"
+                                >
+                                    <option value="None">Standard Strength</option>
+                                    <option value="+1 Turbo Shot">⚡ +1 Turbo Shot (+65mg caffeine)</option>
+                                    <option value="+2 Sprint Crunch Shots">🚀 +2 Sprint Crunch Shots (+130mg)</option>
+                                </select>
                             </div>
 
                             {/* Barista Foam Art Choice */}

@@ -65,11 +65,16 @@ export const BrewingOverlay: React.FC = () => {
 
                 {/* Customization pills */}
                 <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-amber-200/70">
+                    {customization.coffeeType && (
+                        <span className="bg-amber-950/80 text-amber-200 font-semibold px-2 py-0.5 rounded border border-amber-600/50">
+                            🫘 {customization.coffeeType}
+                        </span>
+                    )}
                     <span className="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700/40">
                         {customization.milk}
                     </span>
-                    <span className="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700/40">
-                        {customization.sugar}
+                    <span className="bg-amber-950/80 text-amber-200 px-2 py-0.5 rounded border border-amber-700/40 font-medium">
+                        {customization.sugarSpoons !== undefined ? `🥄 ${customization.sugarSpoons} ${customization.sugarSpoons === 1 ? 'Spoon' : 'Spoons'} Sugar` : customization.sugar}
                     </span>
                     {customization.extraShots !== 'None' && (
                         <span className="bg-red-950/80 text-red-200 px-2 py-0.5 rounded border border-red-700/40 font-medium">

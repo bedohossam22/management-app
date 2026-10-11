@@ -398,3 +398,88 @@ export function calculateDiscountedPrice(
     };
 }
 
+export interface SugarSpoonOption {
+    spoons: number;
+    label: string;
+    arabicLabel: string;
+    percentageEquiv: string;
+    description: string;
+}
+
+export const SUGAR_SPOONS_OPTIONS: SugarSpoonOption[] = [
+    { spoons: 0, label: '0 Spoons', arabicLabel: 'سادة', percentageEquiv: '0% (Black)', description: 'Unsweetened / Pure black coffee' },
+    { spoons: 1, label: '1 Spoon', arabicLabel: 'ع الريحة', percentageEquiv: '25% (Slight)', description: 'Gentle touch of sweetness' },
+    { spoons: 2, label: '2 Spoons', arabicLabel: 'مظبوط', percentageEquiv: '50% (Standard)', description: 'Balanced barista standard' },
+    { spoons: 3, label: '3 Spoons', arabicLabel: 'زيادة', percentageEquiv: '75%', description: 'Sweet focus fuel' },
+    { spoons: 4, label: '4 Spoons', arabicLabel: 'سريحة', percentageEquiv: '100% (Sweet)', description: 'Sweet tooth treat' },
+    { spoons: 5, label: '5 Spoons', arabicLabel: 'زيادة جداً', percentageEquiv: '125%', description: 'Maximum sugar rush' },
+];
+
+export interface CoffeeTypeOption {
+    id: string;
+    name: string;
+    arabicName: string;
+    icon: string;
+    roast: string;
+    description: string;
+}
+
+export const COFFEE_BEAN_TYPES: CoffeeTypeOption[] = [
+    {
+        id: 'arabica',
+        name: 'Arabica Signature Blend',
+        arabicName: 'أرابيكا كلاسيك',
+        icon: '🫘',
+        roast: 'Medium Roast',
+        description: 'Smooth, caramel notes, balanced body & gentle acidity',
+    },
+    {
+        id: 'turkish',
+        name: 'Turkish Sand Roast',
+        arabicName: 'قهوة تركي على الرمل',
+        icon: '🫖',
+        roast: 'Dark Heritage Roast',
+        description: 'Ultra-fine grind infused with aromatic crushed green cardamom',
+    },
+    {
+        id: 'robusta',
+        name: 'Robusta Turbo Roast',
+        arabicName: 'روبوستا كافيين عالي',
+        icon: '⚡',
+        roast: 'Dark Roast',
+        description: 'Double caffeine density with heavy, persistent crema punch',
+    },
+    {
+        id: 'colombian',
+        name: 'Colombian Supremo',
+        arabicName: 'كولومبي سوبريمو',
+        icon: '🏔️',
+        roast: 'Medium-Dark',
+        description: 'Rich dark chocolate, roasted walnut & subtle citrus finish',
+    },
+    {
+        id: 'ethiopian',
+        name: 'Ethiopian Yirgacheffe',
+        arabicName: 'إثيوبي يرجاشيفي',
+        icon: '🇪🇹',
+        roast: 'Light-Medium',
+        description: 'Floral jasmine fragrance, bergamot tea notes & sweet berry finish',
+    },
+    {
+        id: 'decaf',
+        name: 'Swiss Water Decaf',
+        arabicName: 'ديكاف بدون كافيين',
+        icon: '🌙',
+        roast: 'Medium Roast',
+        description: '100% chemical-free decaffeination with rich full flavor',
+    },
+    {
+        id: 'blonde',
+        name: 'Blonde Light Roast',
+        arabicName: 'بلوند تحميص خفيف',
+        icon: '🌟',
+        roast: 'Light Roast',
+        description: 'High chlorogenic acid, crisp brightness and fruity sweetness',
+    },
+];
+
