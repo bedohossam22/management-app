@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
 import type {
     CoffeeMenuItem,
@@ -26,6 +26,10 @@ interface CoffeeContextType {
         customization: CoffeeCustomization,
         kudosMessage?: string
     ) => void;
+    rushBrewing: () => void;
+    cancelBrewing: () => void;
+    takeSip: () => void;
+    dismissOrder: () => void;
     reorder: (completedOrder: CompletedOrder) => void;
     toggleFavorite: (itemId: string) => void;
     isFavorite: (itemId: string) => boolean;
@@ -45,6 +49,23 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [customizingItem, setCustomizingItem] = useState<CoffeeMenuItem | null>(null);
     const [activeOrder, setActiveOrder] = useState<ActiveBrewingOrder | null>(null);
     const [isMuted, setIsMuted] = useState<boolean>(coffeeSound.isMuted);
+
+    const brewIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const autoDismissTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const activeOrderDataRef = useRef<{
+        orderId: string;
+        item: CoffeeMenuItem;
+        customization: CoffeeCustomization;
+        kudosMessage?: string;
+    } | null>(null);
+
+    // Clean up timers on unmount
+    useEffect(() => {
+        return () => {
+            if (brewIntervalRef.current) clearInterval(brewIntervalRef.current);
+            if (autoDismissTimeoutRef.current) clearTimeout(autoDismissTimeoutRef.current);
+        };
+    }, []);
 
     // Favorites
     const [favorites, setFavorites] = useState<string[]>(() => {
@@ -147,11 +168,88 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         localStorage.removeItem(HISTORY_STORAGE_KEY);
     }, []);
 
+    // Finish and serve active order helper
+    const finishOrder = useCallback(
+        (orderId: string, item: CoffeeMenuItem, customization: CoffeeCustomization, kudosMessage?: string) => {
+            if (brewIntervalRef.current) {
+                clearInterval(brewIntervalRef.current);
+                brewIntervalRef.current = null;
+            }
+
+            setActiveOrder((prev) => (prev ? { ...prev, progress: 100, status: 'ready' } : null));
+
+            // Play chime & celebrate
+            coffeeSound.playReadyChime();
+
+            // Complete order & save
+            const recipient = customization.recipient;
+            const completed: CompletedOrder = {
+                id: orderId,
+                item,
+                customization,
+                orderedAt: new Date().toISOString(),
+                caffeineMg: item.caffeineMg + (customization.extraShots.includes('Turbo') ? 65 : customization.extraShots.includes('Sprint') ? 130 : 0),
+                recipient,
+                kudosMessage,
+                discountCode: customization.discountCode,
+                discountPercent: customization.discountPercent,
+                finalPrice: customization.finalPrice,
+            };
+
+            setOrderHistory((prev) => [completed, ...prev].slice(0, 50));
+
+            // Update stats
+            setStats((prev) => ({
+                ...prev,
+                cupsToday: prev.cupsToday + (item.category !== 'snacks' ? 1 : 0),
+                caffeineTodayMg: prev.caffeineTodayMg + completed.caffeineMg,
+                totalOrdersAllTime: prev.totalOrdersAllTime + 1,
+                kudosSentCount: prev.kudosSentCount + (recipient ? 1 : 0),
+                favoriteItemName: item.name,
+                lastDate: new Date().toDateString(),
+                lastOrderTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }));
+
+            if (recipient) {
+                toast.success(`🎁 Virtual coffee & kudos successfully sent to ${recipient}! ☕✨`, {
+                    position: 'bottom-right',
+                    autoClose: 5000,
+                });
+            } else {
+                toast.success(`☕ Ding! Your ${item.name} is freshly brewed and ready at your desk!`, {
+                    position: 'bottom-right',
+                    autoClose: 5000,
+                });
+            }
+
+            // Auto dismiss after 6 seconds if user doesn't interact
+            if (autoDismissTimeoutRef.current) {
+                clearTimeout(autoDismissTimeoutRef.current);
+            }
+            autoDismissTimeoutRef.current = setTimeout(() => {
+                setActiveOrder(null);
+                autoDismissTimeoutRef.current = null;
+                activeOrderDataRef.current = null;
+            }, 6000);
+        },
+        []
+    );
+
     // Simulated Brewing Pipeline
     const startBrewing = useCallback(
         (item: CoffeeMenuItem, customization: CoffeeCustomization, kudosMessage?: string) => {
+            if (brewIntervalRef.current) clearInterval(brewIntervalRef.current);
+            if (autoDismissTimeoutRef.current) clearTimeout(autoDismissTimeoutRef.current);
+
             const newOrderId = 'brew-' + Date.now();
             const recipient = customization.recipient;
+
+            activeOrderDataRef.current = {
+                orderId: newOrderId,
+                item,
+                customization,
+                kudosMessage,
+            };
 
             const initialOrder: ActiveBrewingOrder = {
                 id: newOrderId,
@@ -176,7 +274,7 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             let currentProg = 10;
             let playedSteam = false;
 
-            const timer = setInterval(() => {
+            brewIntervalRef.current = setInterval(() => {
                 currentProg += stepIncrement;
 
                 if (currentProg >= 35 && currentProg < 70 && !playedSteam) {
@@ -194,63 +292,76 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 }
 
                 if (currentProg >= 100) {
-                    clearInterval(timer);
-                    setActiveOrder((prev) => (prev ? { ...prev, progress: 100, status: 'ready' } : null));
-
-                    // Play chime & celebrate
-                    coffeeSound.playReadyChime();
-
-                    // Complete order & save
-                    const completed: CompletedOrder = {
-                        id: newOrderId,
-                        item,
-                        customization,
-                        orderedAt: new Date().toISOString(),
-                        caffeineMg: item.caffeineMg + (customization.extraShots.includes('Turbo') ? 65 : customization.extraShots.includes('Sprint') ? 130 : 0),
-                        recipient,
-                        kudosMessage,
-                        discountCode: customization.discountCode,
-                        discountPercent: customization.discountPercent,
-                        finalPrice: customization.finalPrice,
-                    };
-
-                    setOrderHistory((prev) => [completed, ...prev].slice(0, 50));
-
-                    // Update stats
-                    setStats((prev) => ({
-                        ...prev,
-                        cupsToday: prev.cupsToday + (item.category !== 'snacks' ? 1 : 0),
-                        caffeineTodayMg: prev.caffeineTodayMg + completed.caffeineMg,
-                        totalOrdersAllTime: prev.totalOrdersAllTime + 1,
-                        kudosSentCount: prev.kudosSentCount + (recipient ? 1 : 0),
-                        favoriteItemName: item.name,
-                        lastDate: new Date().toDateString(),
-                        lastOrderTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    }));
-
-                    if (recipient) {
-                        toast.success(`🎁 Virtual coffee & kudos successfully sent to ${recipient}! ☕✨`, {
-                            position: 'bottom-right',
-                            autoClose: 5000,
-                        });
-                    } else {
-                        toast.success(`☕ Ding! Your ${item.name} is freshly brewed and ready at your desk!`, {
-                            position: 'bottom-right',
-                            autoClose: 5000,
-                        });
-                    }
-
-                    // Clear active order after 3.5 seconds
-                    setTimeout(() => {
-                        setActiveOrder(null);
-                    }, 3500);
+                    finishOrder(newOrderId, item, customization, kudosMessage);
                 } else {
                     setActiveOrder((prev) => (prev ? { ...prev, progress: Math.min(Math.round(currentProg), 99), status: newStatus } : null));
                 }
             }, intervalTime);
         },
-        []
+        [finishOrder]
     );
+
+    // Fast-forward / instant finish brew
+    const rushBrewing = useCallback(() => {
+        if (!activeOrderDataRef.current) return;
+        coffeeSound.playRush();
+        const { orderId, item, customization, kudosMessage } = activeOrderDataRef.current;
+        finishOrder(orderId, item, customization, kudosMessage);
+    }, [finishOrder]);
+
+    // Cancel current active brew
+    const cancelBrewing = useCallback(() => {
+        if (brewIntervalRef.current) {
+            clearInterval(brewIntervalRef.current);
+            brewIntervalRef.current = null;
+        }
+        if (autoDismissTimeoutRef.current) {
+            clearTimeout(autoDismissTimeoutRef.current);
+            autoDismissTimeoutRef.current = null;
+        }
+        activeOrderDataRef.current = null;
+        setActiveOrder(null);
+        coffeeSound.playClick();
+        toast.info('☕ Brewing cancelled. Ready when you need energy!');
+    }, []);
+
+    // Take a sip action with sound & energy boost
+    const takeSip = useCallback(() => {
+        if (brewIntervalRef.current) {
+            clearInterval(brewIntervalRef.current);
+            brewIntervalRef.current = null;
+        }
+        if (autoDismissTimeoutRef.current) {
+            clearTimeout(autoDismissTimeoutRef.current);
+            autoDismissTimeoutRef.current = null;
+        }
+        activeOrderDataRef.current = null;
+        setActiveOrder(null);
+
+        coffeeSound.playSip();
+        setStats((prev) => ({
+            ...prev,
+            sipsCount: (prev.sipsCount || 0) + 1,
+        }));
+        toast.success('☕ *Ahhh!* Delicious sip! +100% Focus Boost Activated! 🚀', {
+            position: 'bottom-right',
+            autoClose: 4000,
+        });
+    }, []);
+
+    // Dismiss overlay without taking sip
+    const dismissOrder = useCallback(() => {
+        if (autoDismissTimeoutRef.current) {
+            clearTimeout(autoDismissTimeoutRef.current);
+            autoDismissTimeoutRef.current = null;
+        }
+        if (brewIntervalRef.current) {
+            clearInterval(brewIntervalRef.current);
+            brewIntervalRef.current = null;
+        }
+        activeOrderDataRef.current = null;
+        setActiveOrder(null);
+    }, []);
 
     const reorder = useCallback(
         (completed: CompletedOrder) => {
@@ -274,6 +385,10 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 isMuted,
                 toggleMute,
                 startBrewing,
+                rushBrewing,
+                cancelBrewing,
+                takeSip,
+                dismissOrder,
                 reorder,
                 toggleFavorite,
                 isFavorite,

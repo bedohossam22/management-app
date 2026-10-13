@@ -110,8 +110,11 @@ export const CoffeeHistory: React.FC = () => {
                     <p className="text-2xl font-extrabold text-stone-900 dark:text-stone-100 mt-1">
                         {stats.cupsToday} <span className="text-xs font-medium text-stone-500">cups</span>
                     </p>
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
-                        All-time orders: {stats.totalOrdersAllTime}
+                    <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 flex items-center space-x-1.5 flex-wrap">
+                        <span>All-time: {stats.totalOrdersAllTime}</span>
+                        {stats.sipsCount !== undefined && stats.sipsCount > 0 && (
+                            <span className="text-amber-600 dark:text-amber-400 font-bold">• {stats.sipsCount} {stats.sipsCount === 1 ? 'sip' : 'sips'} enjoyed ✨</span>
+                        )}
                     </p>
                 </div>
 

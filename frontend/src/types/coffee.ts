@@ -87,6 +87,7 @@ export interface CoffeeStats {
     favoriteItemName?: string;
     kudosSentCount: number;
     lastOrderTime?: string;
+    sipsCount?: number;
 }
 
 export interface TeamMember {

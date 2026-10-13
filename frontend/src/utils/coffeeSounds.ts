@@ -206,6 +206,79 @@ class CoffeeSoundPlayer {
             });
         } catch {}
     }
+
+    // Play satisfying coffee sip / slurp sound
+    public playSip() {
+        if (this.isMuted) return;
+        try {
+            const ctx = this.getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            // 1. Soft liquid slurp / intake noise burst
+            const bufferSize = Math.floor(ctx.sampleRate * 0.22);
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1200, now);
+            filter.frequency.exponentialRampToValueAtTime(2400, now + 0.18);
+            filter.Q.setValueAtTime(3.5, now);
+
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.01, now);
+            gain.gain.linearRampToValueAtTime(0.08, now + 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            noise.start(now);
+
+            // 2. Satisfying resonant gulp / swallow tone
+            const osc = ctx.createOscillator();
+            const toneGain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(480, now + 0.16);
+            osc.frequency.exponentialRampToValueAtTime(320, now + 0.3);
+
+            toneGain.gain.setValueAtTime(0.001, now + 0.16);
+            toneGain.gain.linearRampToValueAtTime(0.07, now + 0.2);
+            toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+            osc.connect(toneGain);
+            toneGain.connect(ctx.destination);
+            osc.start(now + 0.16);
+            osc.stop(now + 0.34);
+        } catch {}
+    }
+
+    // Quick energetic rush sound
+    public playRush() {
+        if (this.isMuted) return;
+        try {
+            const ctx = this.getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(350, now);
+            osc.frequency.exponentialRampToValueAtTime(900, now + 0.15);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } catch {}
+    }
 }
 
 export const coffeeSound = new CoffeeSoundPlayer();
