@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useFocus } from '../../context/FocusContext';
 import CommandPalette from './CommandPalette';
 import ThemeToggle from './ThemeToggle';
 import CoffeeTriggerButton from '../coffee/CoffeeTriggerButton';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
+    const { openFocusModal, isActive, timeLeft, mode } = useFocus();
     const navigate = useNavigate();
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
@@ -124,6 +126,23 @@ const Navbar = () => {
 
                         {/* User profile & actions */}
                         <div className="flex items-center space-x-2 sm:space-x-3">
+                            {/* Pomodoro Focus trigger */}
+                            <button
+                                type="button"
+                                onClick={() => openFocusModal()}
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border cursor-pointer ${
+                                    isActive
+                                        ? 'bg-orange-500 text-white border-orange-400 shadow-sm shadow-orange-500/25 animate-pulse'
+                                        : 'bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 border-gray-200 dark:border-stone-700 hover:bg-orange-50/60 dark:hover:bg-stone-750'
+                                }`}
+                                title="Pomodoro Focus Timer (Press 'P')"
+                            >
+                                <span className="text-sm">{mode === 'pomodoro' ? '🍅' : mode === 'shortBreak' ? '☕' : '🌴'}</span>
+                                <span className="font-extrabold hidden sm:inline">
+                                    {isActive ? `${String(Math.floor(timeLeft / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}` : 'Focus'}
+                                </span>
+                            </button>
+
                             {/* Coffee Bar trigger */}
                             <CoffeeTriggerButton />
 

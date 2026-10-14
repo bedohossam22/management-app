@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Task } from '../../types';
 import { formatDate, getPriorityBadgeClass } from '../../utils/helpers';
+import { useFocus } from '../../context/FocusContext';
 
 interface KanbanCardProps {
     task: Task;
@@ -25,6 +26,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     onDragStart,
     onDragEnd,
 }) => {
+    const { selectedTask, openFocusModal, isActive } = useFocus();
+    const isTargetOfFocus = selectedTask?._id === task._id;
     const [isExpanded, setIsExpanded] = useState(false);
 
     const subtasks = task.subtasks || [];
@@ -86,15 +89,41 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         >
             {/* Top row: Priority & Drag Handle */}
             <div className="flex items-center justify-between gap-2 mb-2.5">
-                <span
-                    className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${getPriorityBadgeClass(
-                        task.priority
-                    )}`}
-                >
-                    {task.priority}
-                </span>
+                <div className="flex items-center gap-1.5">
+                    <span
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${getPriorityBadgeClass(
+                            task.priority
+                        )}`}
+                    >
+                        {task.priority}
+                    </span>
+                    {isTargetOfFocus && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-orange-300 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 flex items-center gap-0.5 animate-pulse">
+                            <span>🍅</span>
+                            <span>{isActive ? 'Focusing' : 'Target'}</span>
+                        </span>
+                    )}
+                </div>
 
                 <div className="flex items-center space-x-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openFocusModal(task);
+                        }}
+                        className={`p-1 rounded transition-colors cursor-pointer ${
+                            isTargetOfFocus
+                                ? 'text-orange-600 bg-orange-50 font-bold'
+                                : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'
+                        }`}
+                        title="Focus on this task (Pomodoro Timer)"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+
                     {onDuplicate && (
                         <button
                             type="button"

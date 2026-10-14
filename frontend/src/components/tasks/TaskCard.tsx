@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Task } from '../../types';
 import { formatDate, getPriorityBadgeClass, getStatusBadgeClass } from '../../utils/helpers';
+import { useFocus } from '../../context/FocusContext';
 
 interface TaskCardProps {
     task: Task;
@@ -19,6 +20,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     onDuplicate,
     onToggleSubtask,
 }) => {
+    const { selectedTask, openFocusModal, isActive } = useFocus();
+    const isTargetOfFocus = selectedTask?._id === task._id;
     const [isExpanded, setIsExpanded] = useState(false);
 
     const subtasks = task.subtasks || [];
@@ -38,6 +41,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         {task.title}
                     </h3>
                     <div className="flex items-center space-x-1.5 shrink-0">
+                        {isTargetOfFocus && (
+                            <span className="text-xs px-2 py-0.5 rounded-full border border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 font-bold flex items-center gap-1 animate-pulse">
+                                <span>🍅</span>
+                                <span className="hidden sm:inline">{isActive ? 'Focusing' : 'Target'}</span>
+                            </span>
+                        )}
                         <span
                             className={`text-xs px-2.5 py-0.5 rounded-full border font-semibold ${getPriorityBadgeClass(
                                 task.priority
@@ -174,6 +183,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
                             </svg>
                         </button>
                     )}
+
+                    <button
+                        type="button"
+                        onClick={() => openFocusModal(task)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            isTargetOfFocus
+                                ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/40 font-bold'
+                                : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/20'
+                        }`}
+                        title="Focus on this task (Pomodoro Timer)"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
 
                     <button
                         onClick={() => onEdit(task)}
