@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useFocus } from '../../context/FocusContext';
 import api from '../../services/api';
 import type { Task } from '../../types';
-import type { FocusMode, AmbientSoundType } from '../../types/focus';
+import type { AmbientSoundType } from '../../types/focus';
 import { getPriorityBadgeClass } from '../../utils/helpers';
 
 const FocusModal: React.FC = () => {
@@ -11,7 +11,6 @@ const FocusModal: React.FC = () => {
         closeFocusModal,
         mode,
         timeLeft,
-        totalDuration,
         progressPercent,
         isActive,
         startTimer,
@@ -96,13 +95,6 @@ const FocusModal: React.FC = () => {
     }, [isModalOpen, isActive, startTimer, pauseTimer, closeFocusModal]);
 
     if (!isModalOpen) return null;
-
-    // Mode-specific color accents
-    const getModeColor = (targetMode: FocusMode) => {
-        if (targetMode === 'pomodoro') return 'from-rose-500 to-orange-500';
-        if (targetMode === 'shortBreak') return 'from-emerald-500 to-teal-500';
-        return 'from-indigo-500 to-blue-500';
-    };
 
     const getModeStroke = () => {
         if (mode === 'pomodoro') return '#f97316'; // orange-500

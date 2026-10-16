@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import type { FocusMode, FocusSettings, FocusStats, FocusSession, AmbientSoundType } from '../types/focus';
+import type { FocusMode, FocusSettings, FocusStats, FocusSession } from '../types/focus';
 import type { Task } from '../types';
 import { focusSound } from '../utils/focusSounds';
 import { useCoffee } from './CoffeeContext';
