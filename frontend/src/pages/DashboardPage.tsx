@@ -7,6 +7,7 @@ import TaskFilters from '../components/tasks/TaskFilters';
 import TaskForm from '../components/tasks/TaskForm';
 import TaskStats from '../components/tasks/TaskStats';
 import ExportDropdown from '../components/tasks/ExportDropdown';
+import GreetingBanner from '../components/common/GreetingBanner';
 import KeyboardShortcutsModal from '../components/common/KeyboardShortcutsModal';
 import api from '../services/api';
 import type { Task, TaskFormData } from '../types';
@@ -345,6 +346,8 @@ const DashboardPage: React.FC = () => {
             <Navbar />
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <GreetingBanner />
+
                 {/* Header with Title and Global Actions */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
