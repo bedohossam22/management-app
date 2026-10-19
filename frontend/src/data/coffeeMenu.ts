@@ -364,6 +364,31 @@ export const COFFEE_DISCOUNT_CODES: CoffeeDiscount[] = [
         description: '15% OFF - Daily Standup Sync Discount',
         badge: '⏱️ 15% OFF',
     },
+    // OT (Overtime) Reward Codes
+    {
+        code: 'OT10',
+        discountPercent: 10,
+        description: '10% OFF — Bronze Grinder OT Reward (1-4 OT Hours)',
+        badge: '🥉 10% OFF',
+    },
+    {
+        code: 'OT25',
+        discountPercent: 25,
+        description: '25% OFF — Silver Steamer OT Reward (5-9 OT Hours)',
+        badge: '🥈 25% OFF',
+    },
+    {
+        code: 'OT50',
+        discountPercent: 50,
+        description: '50% OFF — Gold Barista OT Reward (10-19 OT Hours)',
+        badge: '🥇 50% OFF',
+    },
+    {
+        code: 'OT100',
+        discountPercent: 100,
+        description: '100% FREE — Diamond Sprint Master OT Reward (20+ OT Hours)',
+        badge: '💎 100% FREE',
+    },
 ];
 
 export function validateDiscountCode(rawCode: string): CoffeeDiscount | null {
@@ -482,4 +507,98 @@ export const COFFEE_BEAN_TYPES: CoffeeTypeOption[] = [
         description: 'High chlorogenic acid, crisp brightness and fruity sweetness',
     },
 ];
+
+// --- OT (Overtime) Discount Reward System ---
+
+export interface OTRewardTier {
+    id: string;
+    tierName: string;
+    tierNameAr: string;
+    minHours: number;
+    maxHours: number | null;
+    discountPercent: number;
+    icon: string;
+    badge: string;
+    color: string;       // tailwind color token base (e.g. 'amber', 'emerald')
+    description: string;
+    perks: string[];
+    promoCode: string;
+}
+
+export const OT_REWARD_TIERS: OTRewardTier[] = [
+    {
+        id: 'ot-bronze',
+        tierName: 'Bronze Grinder',
+        tierNameAr: 'الطاحن البرونزي',
+        minHours: 1,
+        maxHours: 4,
+        discountPercent: 10,
+        icon: '🥉',
+        badge: '10% OFF',
+        color: 'amber',
+        description: 'Thanks for the extra hustle! Enjoy a small discount on any menu item.',
+        perks: ['10% off all drinks', 'Free sugar upgrade'],
+        promoCode: 'OT10',
+    },
+    {
+        id: 'ot-silver',
+        tierName: 'Silver Steamer',
+        tierNameAr: 'البخّار الفضي',
+        minHours: 5,
+        maxHours: 9,
+        discountPercent: 25,
+        icon: '🥈',
+        badge: '25% OFF',
+        color: 'slate',
+        description: 'Impressive dedication! Your overtime effort earns a solid quarter-off reward.',
+        perks: ['25% off all drinks', 'Free extra shot', 'Priority brewing queue'],
+        promoCode: 'OT25',
+    },
+    {
+        id: 'ot-gold',
+        tierName: 'Gold Barista',
+        tierNameAr: 'الباريستا الذهبي',
+        minHours: 10,
+        maxHours: 19,
+        discountPercent: 50,
+        icon: '🥇',
+        badge: '50% OFF',
+        color: 'yellow',
+        description: 'Outstanding commitment! Half-price drinks as our way of saying thank you.',
+        perks: ['50% off all drinks & snacks', 'Free latte art upgrade', 'Manager Venti size unlock', 'Team kudos badge'],
+        promoCode: 'OT50',
+    },
+    {
+        id: 'ot-diamond',
+        tierName: 'Diamond Sprint Master',
+        tierNameAr: 'ماستر السبرنت الماسي',
+        minHours: 20,
+        maxHours: null,
+        discountPercent: 100,
+        icon: '💎',
+        badge: '100% FREE',
+        color: 'cyan',
+        description: 'Legendary overtime warrior! Everything on the house — you\'ve earned it all.',
+        perks: ['100% free — everything on the house', 'Exclusive Diamond latte art', 'VIP sprint champion title', 'Send free coffees to teammates', 'Permanent hall of fame entry'],
+        promoCode: 'OT100',
+    },
+];
+
+/** Given overtime hours worked this month, return the matching reward tier (or null if none). */
+export function getOTRewardTier(otHours: number): OTRewardTier | null {
+    if (otHours <= 0) return null;
+    // Find the highest tier the user qualifies for
+    const sorted = [...OT_REWARD_TIERS].sort((a, b) => b.minHours - a.minHours);
+    return sorted.find((t) => otHours >= t.minHours) || null;
+}
+
+/** Convert an OT reward tier into a CoffeeDiscount so it works with the existing discount system. */
+export function otTierToDiscount(tier: OTRewardTier): CoffeeDiscount {
+    return {
+        code: tier.promoCode,
+        discountPercent: tier.discountPercent,
+        description: `${tier.badge} — ${tier.tierName} OT Reward`,
+        badge: `${tier.icon} ${tier.badge}`,
+    };
+}
 
