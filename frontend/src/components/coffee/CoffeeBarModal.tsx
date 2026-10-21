@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { useCoffee } from '../../context/CoffeeContext';
+import { toast } from 'react-toastify';
+import { useCoffee, type CoffeeTabType } from '../../context/CoffeeContext';
 import { COFFEE_MENU_ITEMS, COFFEE_QUOTES, COFFEE_DISCOUNT_CODES } from '../../data/coffeeMenu';
 import type { CoffeeCategory, CoffeeMenuItem } from '../../types/coffee';
 import CoffeeCustomizerModal from './CoffeeCustomizerModal';
 import CoffeeRoulette from './CoffeeRoulette';
 import SendCoffeeModal from './SendCoffeeModal';
 import CoffeeHistory from './CoffeeHistory';
+import OTRewards from './OTRewards';
 import { coffeeSound } from '../../utils/coffeeSounds';
 
-type TabType = 'menu' | 'roulette' | 'send' | 'history';
+type TabType = CoffeeTabType;
 
 export const CoffeeBarModal: React.FC = () => {
     const {
@@ -23,9 +25,13 @@ export const CoffeeBarModal: React.FC = () => {
         customizingItem,
         setCustomizingItem,
         stats,
+        coffeeBarTab,
+        setCoffeeBarTab,
     } = useCoffee();
 
-    const [activeTab, setActiveTab] = useState<TabType>('menu');
+    const activeTab = coffeeBarTab;
+    const setActiveTab = setCoffeeBarTab;
+    const [appliedPromoCode, setAppliedPromoCode] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<CoffeeCategory | 'all' | 'favorites'>('all');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -163,6 +169,21 @@ export const CoffeeBarModal: React.FC = () => {
                                 }`}
                             >
                                 <span>🎁 Send to Teammate</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('ot')}
+                                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap ${
+                                    activeTab === 'ot'
+                                        ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-500/30'
+                                        : 'bg-white/10 text-amber-100 hover:bg-white/20'
+                                }`}
+                            >
+                                <span>⏰ OT Rewards</span>
+                                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-400 text-stone-950 font-black">
+                                    NEW
+                                </span>
                             </button>
 
                             <button
@@ -383,6 +404,16 @@ export const CoffeeBarModal: React.FC = () => {
                             <SendCoffeeModal onClose={() => setActiveTab('history')} />
                         )}
 
+                        {activeTab === 'ot' && (
+                            <OTRewards
+                                onApplyCode={(code) => {
+                                    setAppliedPromoCode(code);
+                                    setActiveTab('menu');
+                                    toast.success(`🎁 Promo code "${code}" applied! Select a coffee to customize with your OT discount.`);
+                                }}
+                            />
+                        )}
+
                         {activeTab === 'history' && <CoffeeHistory />}
                     </div>
                 </div>
@@ -391,6 +422,7 @@ export const CoffeeBarModal: React.FC = () => {
             {/* Customizer Sub-Modal */}
             <CoffeeCustomizerModal
                 item={customizingItem}
+                initialPromoCode={appliedPromoCode}
                 onClose={() => setCustomizingItem(null)}
                 onBrew={(customization, kudos) => {
                     if (customizingItem) {

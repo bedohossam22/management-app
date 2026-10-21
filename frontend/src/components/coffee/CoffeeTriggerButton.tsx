@@ -145,6 +145,17 @@ export const CoffeeTriggerButton: React.FC<CoffeeTriggerButtonProps> = ({
                     <span>⚡</span>
                     <span className="hidden xl:inline">Brew</span>
                 </button>
+
+                {/* OT Rewards Quick Button */}
+                <button
+                    type="button"
+                    onClick={() => openCoffeeBar('ot')}
+                    className="px-2 py-1.5 text-xs font-bold rounded-lg bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-800/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60 transition-all cursor-pointer flex items-center space-x-1"
+                    title="View Overtime (OT) Discount Rewards"
+                >
+                    <span>⏰</span>
+                    <span className="hidden xl:inline">OT</span>
+                </button>
             </div>
         </div>
     );

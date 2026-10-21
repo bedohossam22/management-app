@@ -23,12 +23,14 @@ interface CoffeeCustomizerModalProps {
     item: CoffeeMenuItem | null;
     onClose: () => void;
     onBrew: (customization: CoffeeCustomization, kudosMessage?: string) => void;
+    initialPromoCode?: string | null;
 }
 
 export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
     item,
     onClose,
     onBrew,
+    initialPromoCode,
 }) => {
     const isSnack = item?.category === 'snacks';
 
@@ -75,10 +77,22 @@ export const CoffeeCustomizerModal: React.FC<CoffeeCustomizerModalProps> = ({
             setTemperature('Hot');
             setLatteArt('❤️ Heart');
         }
-        setDiscountInput('');
-        setAppliedDiscount(null);
+
         setDiscountError(null);
-    }, [item]);
+        if (initialPromoCode) {
+            const validated = validateDiscountCode(initialPromoCode);
+            if (validated) {
+                setAppliedDiscount(validated);
+                setDiscountInput(validated.code);
+            } else {
+                setDiscountInput('');
+                setAppliedDiscount(null);
+            }
+        } else {
+            setDiscountInput('');
+            setAppliedDiscount(null);
+        }
+    }, [item, initialPromoCode]);
 
     if (!item) return null;
 

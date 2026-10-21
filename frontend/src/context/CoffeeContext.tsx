@@ -10,10 +10,14 @@ import type {
 import { COFFEE_MENU_ITEMS } from '../data/coffeeMenu';
 import { coffeeSound } from '../utils/coffeeSounds';
 
+export type CoffeeTabType = 'menu' | 'roulette' | 'send' | 'ot' | 'history';
+
 interface CoffeeContextType {
     isModalOpen: boolean;
     setIsModalOpen: (open: boolean) => void;
-    openCoffeeBar: () => void;
+    coffeeBarTab: CoffeeTabType;
+    setCoffeeBarTab: (tab: CoffeeTabType) => void;
+    openCoffeeBar: (tab?: CoffeeTabType) => void;
     closeCoffeeBar: () => void;
     activeOrder: ActiveBrewingOrder | null;
     orderHistory: CompletedOrder[];
@@ -46,6 +50,7 @@ const FAVORITES_STORAGE_KEY = 'task_manager_coffee_favorites';
 
 export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [coffeeBarTab, setCoffeeBarTab] = useState<CoffeeTabType>('menu');
     const [customizingItem, setCustomizingItem] = useState<CoffeeMenuItem | null>(null);
     const [activeOrder, setActiveOrder] = useState<ActiveBrewingOrder | null>(null);
     const [isMuted, setIsMuted] = useState<boolean>(coffeeSound.isMuted);
@@ -132,8 +137,11 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
     }, [stats]);
 
-    const openCoffeeBar = useCallback(() => {
+    const openCoffeeBar = useCallback((tab?: CoffeeTabType) => {
         coffeeSound.playClick();
+        if (tab) {
+            setCoffeeBarTab(tab);
+        }
         setIsModalOpen(true);
     }, []);
 
@@ -376,6 +384,8 @@ export const CoffeeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             value={{
                 isModalOpen,
                 setIsModalOpen,
+                coffeeBarTab,
+                setCoffeeBarTab,
                 openCoffeeBar,
                 closeCoffeeBar,
                 activeOrder,

@@ -21,7 +21,7 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
     const [appliedCode, setAppliedCode] = useState<string | null>(null);
 
-    const currentTier = useMemo(() => getOTRewardTier(otHours), [otHours]);
+    const currentTier: OTRewardTier | null = useMemo(() => getOTRewardTier(otHours), [otHours]);
 
     const handleSliderChange = (val: number) => {
         setOtHours(val);
@@ -44,7 +44,7 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
     };
 
     // Progress toward next tier
-    const nextTier = useMemo(() => {
+    const nextTier: OTRewardTier | null = useMemo(() => {
         if (!currentTier) return OT_REWARD_TIERS[0];
         const idx = OT_REWARD_TIERS.findIndex((t) => t.id === currentTier.id);
         return idx < OT_REWARD_TIERS.length - 1 ? OT_REWARD_TIERS[idx + 1] : null;
@@ -59,6 +59,11 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
         const progress = otHours - currentTier.minHours;
         return Math.min(Math.round((progress / range) * 100), 100);
     }, [otHours, currentTier, nextTier]);
+
+    // Overall OT milestone percentage across full 30h range
+    const totalOTPercentage = useMemo(() => {
+        return Math.min(Math.round((otHours / 30) * 100), 100);
+    }, [otHours]);
 
     const tierColorMap: Record<string, { bg: string; border: string; text: string; glow: string; barBg: string }> = {
         amber: {
@@ -184,6 +189,35 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
                         </button>
                     ))}
                 </div>
+
+                {/* Visual Overall OT Progress Bar */}
+                <div className="pt-2 border-t border-stone-100 dark:border-stone-700/60">
+                    <div className="flex items-center justify-between text-[11px] mb-1.5">
+                        <span className="font-bold text-stone-700 dark:text-stone-300 flex items-center space-x-1.5">
+                            <span>📊</span>
+                            <span>Overtime Reward Progress Bar</span>
+                        </span>
+                        <span className="font-mono font-extrabold text-amber-600 dark:text-amber-400">
+                            {otHours} / 30h ({totalOTPercentage}%)
+                        </span>
+                    </div>
+
+                    {/* Milestone Progress Bar Track */}
+                    <div className="relative w-full h-3 bg-stone-200 dark:bg-stone-700 rounded-full overflow-hidden shadow-inner">
+                        <div
+                            className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-cyan-400 transition-all duration-500 ease-out shadow-xs"
+                            style={{ width: `${Math.max(totalOTPercentage, otHours > 0 ? 4 : 0)}%` }}
+                        />
+                    </div>
+
+                    {/* Milestone labels */}
+                    <div className="grid grid-cols-4 text-center mt-1 text-[9px] text-stone-500 dark:text-stone-400">
+                        <span className={otHours >= 1 ? 'font-bold text-amber-600 dark:text-amber-400' : ''}>🥉 1h (10% OFF)</span>
+                        <span className={otHours >= 5 ? 'font-bold text-slate-700 dark:text-slate-300' : ''}>🥈 5h (25% OFF)</span>
+                        <span className={otHours >= 10 ? 'font-bold text-yellow-600 dark:text-yellow-400' : ''}>🥇 10h (50% OFF)</span>
+                        <span className={otHours >= 20 ? 'font-bold text-cyan-600 dark:text-cyan-400' : ''}>💎 20h (100% FREE)</span>
+                    </div>
+                </div>
             </div>
 
             {/* Current Tier Status */}
@@ -253,7 +287,7 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
                     </div>
 
                     {/* Progress to Next Tier */}
-                    {nextTier && (
+                    {nextTier ? (
                         <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10">
                             <div className="flex items-center justify-between text-[11px] mb-1.5">
                                 <span className="font-semibold text-stone-600 dark:text-stone-400">
@@ -270,6 +304,19 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
                                 />
                             </div>
                         </div>
+                    ) : (
+                        <div className="mt-3 pt-3 border-t border-black/10 dark:border-white/10">
+                            <div className="flex items-center justify-between text-[11px] mb-1.5">
+                                <span className="font-semibold text-cyan-600 dark:text-cyan-400 flex items-center space-x-1">
+                                    <span>💎</span>
+                                    <span>Maximum Tier Achieved!</span>
+                                </span>
+                                <span className="font-bold text-cyan-700 dark:text-cyan-300">100% Free VIP</span>
+                            </div>
+                            <div className="w-full bg-cyan-200/50 dark:bg-cyan-950/50 h-2.5 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full bg-cyan-500 w-full animate-pulse" />
+                            </div>
+                        </div>
                     )}
                 </div>
             ) : (
@@ -281,9 +328,14 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
                     <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
                         Log at least 1 overtime hour to start earning café discount rewards!
                     </p>
-                    <div className="mt-3 flex items-center justify-center space-x-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
-                        <span>🥉</span>
-                        <span>Just 1 OT hour unlocks your first 10% discount</span>
+                    <div className="mt-3 max-w-xs mx-auto">
+                        <div className="flex justify-between text-[10px] text-stone-500 dark:text-stone-400 mb-1">
+                            <span>Unlock 🥉 Bronze Tier (1h)</span>
+                            <span className="font-bold text-amber-600 dark:text-amber-400">1h needed</span>
+                        </div>
+                        <div className="w-full bg-stone-200 dark:bg-stone-700 h-2 rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-500 rounded-full" style={{ width: '0%' }} />
+                        </div>
                     </div>
                 </div>
             )}
@@ -295,7 +347,7 @@ export const OTRewards: React.FC<OTRewardsProps> = ({ onApplyCode }) => {
                     <span className="text-[10px] font-medium text-stone-400 normal-case">(مستويات المكافآت)</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {OT_REWARD_TIERS.map((tier) => {
+                    {OT_REWARD_TIERS.map((tier: OTRewardTier) => {
                         const isUnlocked = otHours >= tier.minHours;
                         const isCurrent = currentTier?.id === tier.id;
                         const colors = tierColorMap[tier.color];
