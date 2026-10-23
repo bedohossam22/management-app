@@ -37,7 +37,7 @@ export const CoffeeTriggerButton: React.FC<CoffeeTriggerButtonProps> = ({
         return (
             <button
                 type="button"
-                onClick={openCoffeeBar}
+                onClick={() => openCoffeeBar()}
                 className="fixed bottom-6 left-6 z-30 group flex items-center space-x-2.5 px-4 py-3 bg-gradient-to-r from-amber-700 via-stone-800 to-amber-900 text-white rounded-2xl shadow-xl hover:shadow-amber-500/25 border border-amber-500/40 transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
                 title="Open Manager's Coffee & Break Bar"
             >
@@ -71,7 +71,7 @@ export const CoffeeTriggerButton: React.FC<CoffeeTriggerButtonProps> = ({
             {/* 1. Coffee Main Button */}
             <button
                 type="button"
-                onClick={openCoffeeBar}
+                onClick={() => openCoffeeBar()}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 border cursor-pointer ${
                     activeOrder
                         ? 'bg-amber-500 text-stone-950 border-amber-400 shadow-md shadow-amber-500/30 animate-pulse'
