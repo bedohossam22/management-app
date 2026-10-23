@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { toast } from 'react-toastify';
-import { useCoffee, type CoffeeTabType } from '../../context/CoffeeContext';
+import { useCoffee } from '../../context/CoffeeContext';
 import { COFFEE_MENU_ITEMS, COFFEE_QUOTES, COFFEE_DISCOUNT_CODES } from '../../data/coffeeMenu';
 import type { CoffeeCategory, CoffeeMenuItem } from '../../types/coffee';
 import CoffeeCustomizerModal from './CoffeeCustomizerModal';
@@ -9,8 +9,6 @@ import SendCoffeeModal from './SendCoffeeModal';
 import CoffeeHistory from './CoffeeHistory';
 import OTRewards from './OTRewards';
 import { coffeeSound } from '../../utils/coffeeSounds';
-
-type TabType = CoffeeTabType;
 
 export const CoffeeBarModal: React.FC = () => {
     const {
