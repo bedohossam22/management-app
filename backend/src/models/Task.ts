@@ -7,6 +7,15 @@ export interface INote {
     createdAt?: Date;
 }
 
+// Define comment interface
+export interface IComment {
+    _id?: mongoose.Types.ObjectId;
+    text: string;
+    user?: mongoose.Types.ObjectId;
+    userName?: string;
+    createdAt?: Date;
+}
+
 // Define subtask interface
 export interface ISubtask {
     _id?: mongoose.Types.ObjectId;
@@ -23,6 +32,7 @@ export interface ITask extends Document {
     dueDate: Date;
     subtasks: ISubtask[];
     notes: INote[];
+    comments: IComment[];
     user: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
@@ -53,6 +63,28 @@ const noteSchema = new Schema(
             required: [true, 'Note content is required'],
             trim: true,
             maxlength: [1000, 'Note cannot exceed 1000 characters'],
+        },
+    },
+    { _id: true, timestamps: { createdAt: true, updatedAt: false } }
+);
+
+// Comment Schema
+const commentSchema = new Schema(
+    {
+        text: {
+            type: String,
+            required: [true, 'Comment text is required'],
+            trim: true,
+            maxlength: [1000, 'Comment cannot exceed 1000 characters'],
+        },
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        userName: {
+            type: String,
+            trim: true,
+            default: 'Anonymous',
         },
     },
     { _id: true, timestamps: { createdAt: true, updatedAt: false } }
@@ -92,6 +124,10 @@ const taskSchema = new Schema<ITask>(
         },
         notes: {
             type: [noteSchema],
+            default: [],
+        },
+        comments: {
+            type: [commentSchema],
             default: [],
         },
         user: {

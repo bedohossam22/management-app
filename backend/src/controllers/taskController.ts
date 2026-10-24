@@ -378,4 +378,119 @@ export const deleteNote = async (req: Request, res: Response) => {
             message: 'Error deleting note',
         });
     }
+};
+
+// Add Comment to Task
+export const addComment = async (req: Request, res: Response) => {
+    try {
+        const { text, content } = req.body;
+        const commentText = (typeof text === 'string' ? text : typeof content === 'string' ? content : '').trim();
+
+        if (!commentText) {
+            return res.status(400).json({
+                success: false,
+                message: 'Comment text is required',
+            });
+        }
+
+        if (commentText.length > 1000) {
+            return res.status(400).json({
+                success: false,
+                message: 'Comment cannot exceed 1000 characters',
+            });
+        }
+
+        const task = await Task.findOne({
+            _id: req.params.id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        if (!task.comments) {
+            task.comments = [] as any;
+        }
+
+        const newComment = {
+            text: commentText,
+            user: req.user._id,
+            userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+        };
+
+        task.comments.push(newComment as any);
+        await task.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Comment added successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+        console.error('Add comment error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error adding comment',
+        });
+    }
+};
+
+// Delete Comment from Task
+export const deleteComment = async (req: Request, res: Response) => {
+    try {
+        const { id, commentId } = req.params;
+        const task = await Task.findOne({
+            _id: id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        const commentIndex = (task.comments || []).findIndex(
+            (c: any) => c._id?.toString() === commentId
+        );
+
+        if (commentIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                message: 'Comment not found',
+            });
+        }
+
+        task.comments.splice(commentIndex, 1);
+        await task.save();
+
+        res.json({
+            success: true,
+            message: 'Comment deleted successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+        console.error('Delete comment error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting comment',
+        });
+    }
 };

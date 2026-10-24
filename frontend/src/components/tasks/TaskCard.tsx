@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import type { Task } from '../../types';
+import type { Task, Comment } from '../../types';
 import { formatDate, getPriorityBadgeClass, getStatusBadgeClass } from '../../utils/helpers';
 import { useFocus } from '../../context/FocusContext';
+import TaskComments from './TaskComments';
 
 interface TaskCardProps {
     task: Task;
@@ -10,6 +11,7 @@ interface TaskCardProps {
     onStatusChange: (id: string, status: Task['status']) => void;
     onDuplicate?: (task: Task) => void;
     onToggleSubtask?: (taskId: string, subtaskId?: string, index?: number) => void;
+    onCommentUpdate?: (taskId: string, comments: Comment[]) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -19,15 +21,18 @@ const TaskCard: React.FC<TaskCardProps> = ({
     onStatusChange,
     onDuplicate,
     onToggleSubtask,
+    onCommentUpdate,
 }) => {
     const { selectedTask, openFocusModal, isActive } = useFocus();
     const isTargetOfFocus = selectedTask?._id === task._id;
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showComments, setShowComments] = useState(false);
 
     const subtasks = task.subtasks || [];
     const totalSubtasks = subtasks.length;
     const completedSubtasks = subtasks.filter((s) => s.isCompleted).length;
     const progressPercent = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
+    const totalCommentsCount = (task.comments?.length || 0) + (task.notes?.length || 0);
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200/90 p-5 hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
@@ -139,25 +144,54 @@ const TaskCard: React.FC<TaskCardProps> = ({
                         )}
                     </div>
                 )}
+
+                {/* Inline Comment Section */}
+                {showComments && (
+                    <div className="mt-3 mb-1 p-3 bg-gray-50/90 rounded-xl border border-gray-200/80 shadow-2xs transition-all">
+                        <TaskComments
+                            taskId={task._id}
+                            comments={task.comments}
+                            notes={task.notes}
+                            compact={true}
+                            autoFocus={true}
+                            onCommentsUpdate={(updatedComments) => {
+                                if (onCommentUpdate) {
+                                    onCommentUpdate(task._id, updatedComments);
+                                }
+                            }}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Footer */}
             <div className="flex flex-wrap justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-100 gap-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                     <div className="flex items-center gap-1">
                         <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <span>{formatDate(task.dueDate)}</span>
                     </div>
-                    {task.notes && task.notes.length > 0 && (
-                        <div className="flex items-center gap-1 text-amber-600" title={`${task.notes.length} note${task.notes.length === 1 ? '' : 's'}`}>
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            <span className="text-[11px] font-medium">{task.notes.length}</span>
-                        </div>
-                    )}
+
+                    {/* Comment Toggle Button */}
+                    <button
+                        type="button"
+                        onClick={() => setShowComments(!showComments)}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg transition-colors cursor-pointer text-[11px] font-semibold ${
+                            showComments
+                                ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
+                                : totalCommentsCount > 0
+                                ? 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                                : 'text-gray-400 hover:text-blue-600 hover:bg-gray-100'
+                        }`}
+                        title={showComments ? 'Hide comments' : 'Open task comments'}
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span>{totalCommentsCount > 0 ? totalCommentsCount : 'Comment'}</span>
+                    </button>
                 </div>
 
                 <div className="flex items-center space-x-1 sm:space-x-1.5">

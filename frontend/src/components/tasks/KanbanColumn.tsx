@@ -12,6 +12,7 @@ interface KanbanColumnProps {
     onAddTask: (status: Task['status']) => void;
     onDuplicate?: (task: Task) => void;
     onToggleSubtask?: (taskId: string, subtaskId?: string, index?: number) => void;
+    onCommentUpdate?: (taskId: string, comments: any[]) => void;
     draggedTaskId: string | null;
     onCardDragStart: (e: React.DragEvent<HTMLDivElement>, task: Task) => void;
     onCardDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -85,6 +86,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
     onAddTask,
     onDuplicate,
     onToggleSubtask,
+    onCommentUpdate,
     draggedTaskId,
     onCardDragStart,
     onCardDragEnd,
@@ -158,6 +160,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                             onStatusChange={onStatusChange}
                             onDuplicate={onDuplicate}
                             onToggleSubtask={onToggleSubtask}
+                            onCommentUpdate={onCommentUpdate}
                             isDragging={draggedTaskId === task._id}
                             onDragStart={onCardDragStart}
                             onDragEnd={onCardDragEnd}

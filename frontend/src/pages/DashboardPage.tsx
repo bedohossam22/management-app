@@ -10,7 +10,7 @@ import ExportDropdown from '../components/tasks/ExportDropdown';
 import GreetingBanner from '../components/common/GreetingBanner';
 import KeyboardShortcutsModal from '../components/common/KeyboardShortcutsModal';
 import api from '../services/api';
-import type { Task, TaskFormData } from '../types';
+import type { Task, TaskFormData, Comment } from '../types';
 
 type ViewMode = 'list' | 'kanban';
 
@@ -250,6 +250,12 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleCommentUpdate = (taskId: string, comments: Comment[]) => {
+        setTasks((prev) =>
+            prev.map((t) => (t._id === taskId ? { ...t, comments } : t))
+        );
+    };
+
     const handleOpenCreate = (status: Task['status'] = 'To Do') => {
         setEditingTask(null);
         setDefaultTaskStatus(status);
@@ -446,6 +452,7 @@ const DashboardPage: React.FC = () => {
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
                         onToggleSubtask={handleToggleSubtask}
+                        onCommentUpdate={handleCommentUpdate}
                     />
                 ) : (
                     <KanbanBoard
@@ -456,6 +463,7 @@ const DashboardPage: React.FC = () => {
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
                         onToggleSubtask={handleToggleSubtask}
+                        onCommentUpdate={handleCommentUpdate}
                         onAddTask={(status) => handleOpenCreate(status || 'To Do')}
                     />
                 )}

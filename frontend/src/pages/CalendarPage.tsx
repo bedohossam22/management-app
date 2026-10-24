@@ -753,6 +753,12 @@ const CalendarPage: React.FC = () => {
                 isOpen={isDetailsOpen}
                 task={detailTask}
                 onToggleSubtask={handleToggleSubtask}
+                onCommentUpdate={(taskId, updatedComments) => {
+                    setTasks((prev) =>
+                        prev.map((t) => (t._id === taskId ? { ...t, comments: updatedComments } : t))
+                    );
+                    setDetailTask((prev) => (prev && prev._id === taskId ? { ...prev, comments: updatedComments } : prev));
+                }}
                 onClose={() => {
                     setIsDetailsOpen(false);
                     setDetailTask(null);

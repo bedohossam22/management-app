@@ -1,15 +1,23 @@
 import React from 'react';
-import type { Task } from '../../types';
+import type { Task, Comment } from '../../types';
 import { formatDate, getPriorityBadgeClass, getStatusBadgeClass } from '../../utils/helpers';
+import TaskComments from './TaskComments';
 
 interface TaskDetailsProps {
     task: Task | null;
     isOpen: boolean;
     onClose: () => void;
     onToggleSubtask?: (taskId: string, subtaskId?: string, index?: number) => void;
+    onCommentUpdate?: (taskId: string, comments: Comment[]) => void;
 }
 
-const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onToggleSubtask }) => {
+const TaskDetails: React.FC<TaskDetailsProps> = ({
+    task,
+    isOpen,
+    onClose,
+    onToggleSubtask,
+    onCommentUpdate,
+}) => {
     if (!isOpen || !task) return null;
 
     const subtasks = task.subtasks || [];
@@ -91,6 +99,21 @@ const TaskDetails: React.FC<TaskDetailsProps> = ({ task, isOpen, onClose, onTogg
                         </div>
                     </div>
                 )}
+
+                {/* Comments Section */}
+                <div className="mb-5 bg-gray-50/70 rounded-xl p-3.5 border border-gray-200/80">
+                    <TaskComments
+                        taskId={task._id}
+                        comments={task.comments}
+                        notes={task.notes}
+                        compact={false}
+                        onCommentsUpdate={(updatedComments) => {
+                            if (onCommentUpdate) {
+                                onCommentUpdate(task._id, updatedComments);
+                            }
+                        }}
+                    />
+                </div>
 
                 <div className="text-xs text-gray-500 space-y-1.5 pt-3 border-t border-gray-100">
                     <p className="flex justify-between">

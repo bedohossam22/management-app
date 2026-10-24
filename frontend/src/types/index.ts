@@ -21,6 +21,15 @@ export interface Note {
     createdAt: string;
 }
 
+// Comment types
+export interface Comment {
+    _id: string;
+    text: string;
+    user?: string;
+    userName?: string;
+    createdAt: string;
+}
+
 // Task types
 export interface Task {
     _id: string;
@@ -31,6 +40,7 @@ export interface Task {
     dueDate: string;
     subtasks?: Subtask[];
     notes?: Note[];
+    comments?: Comment[];
     user: string;
     createdAt: string;
     updatedAt: string;

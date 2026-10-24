@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import type { Task, TaskFormData, Subtask, Note } from '../../types';
-import TaskNotes from './TaskNotes';
+import type { Task, TaskFormData, Subtask, Note, Comment } from '../../types';
+import TaskComments from './TaskComments';
 
 interface TaskFormProps {
     initialData?: Task | null;
@@ -20,6 +20,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
     const [dueDate, setDueDate] = useState('');
     const [subtasks, setSubtasks] = useState<Subtask[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
+    const [comments, setComments] = useState<Comment[]>([]);
     const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
@@ -32,6 +33,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
             setDueDate(initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '');
             setSubtasks(Array.isArray(initialData.subtasks) ? [...initialData.subtasks] : []);
             setNotes(Array.isArray(initialData.notes) ? [...initialData.notes] : []);
+            setComments(Array.isArray(initialData.comments) ? [...initialData.comments] : []);
         } else {
             setTitle('');
             setDescription('');
@@ -40,6 +42,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
             setDueDate(defaultDueDate || new Date().toISOString().split('T')[0]);
             setSubtasks([]);
             setNotes([]);
+            setComments([]);
         }
         setNewSubtaskTitle('');
     }, [initialData, defaultStatus, defaultDueDate, isOpen]);
@@ -307,18 +310,22 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, defaultStatus, default
                         )}
                     </div>
 
-                    {/* Activity Log / Notes Section — only for existing tasks */}
+                    {/* Comments Section — for existing tasks */}
                     {initialData && initialData._id && (
-                        <TaskNotes
-                            taskId={initialData._id}
-                            notes={notes}
-                            onNotesUpdate={(updatedNotes) => {
-                                setNotes(updatedNotes);
-                                if (onTaskUpdate && initialData) {
-                                    onTaskUpdate({ ...initialData, notes: updatedNotes });
-                                }
-                            }}
-                        />
+                        <div className="pt-3 border-t border-gray-100">
+                            <TaskComments
+                                taskId={initialData._id}
+                                comments={comments}
+                                notes={notes}
+                                compact={false}
+                                onCommentsUpdate={(updatedComments) => {
+                                    setComments(updatedComments);
+                                    if (onTaskUpdate && initialData) {
+                                        onTaskUpdate({ ...initialData, comments: updatedComments });
+                                    }
+                                }}
+                            />
+                        </div>
                     )}
 
                     <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">

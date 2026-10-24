@@ -10,6 +10,7 @@ interface TaskListProps {
     onStatusChange: (id: string, status: Task['status']) => void;
     onDuplicate?: (task: Task) => void;
     onToggleSubtask?: (taskId: string, subtaskId?: string, index?: number) => void;
+    onCommentUpdate?: (taskId: string, comments: any[]) => void;
 }
 
 const TaskList: React.FC<TaskListProps> = ({
@@ -20,6 +21,7 @@ const TaskList: React.FC<TaskListProps> = ({
     onStatusChange,
     onDuplicate,
     onToggleSubtask,
+    onCommentUpdate,
 }) => {
     if (loading) {
         return (
@@ -50,6 +52,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     onStatusChange={onStatusChange}
                     onDuplicate={onDuplicate}
                     onToggleSubtask={onToggleSubtask}
+                    onCommentUpdate={onCommentUpdate}
                 />
             ))}
         </div>
