@@ -10,6 +10,7 @@ import {
     deleteNote,
     addComment,
     deleteComment,
+    toggleCommentReaction,
 } from '../controllers/taskController';
 import { createTaskValidation, updateTaskValidation } from '../validators/taskValidator';
 import { auth } from '../middleware/auth';
@@ -33,5 +34,6 @@ router.delete('/:id/notes/:noteId', deleteNote);
 // Comments routes
 router.post('/:id/comments', addComment);
 router.delete('/:id/comments/:commentId', deleteComment);
+router.post('/:id/comments/:commentId/reactions', toggleCommentReaction);
 
 export default router;

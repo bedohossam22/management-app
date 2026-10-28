@@ -84,10 +84,18 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
 
     return (
         <div
-            draggable
-            onDragStart={(e) => onDragStart(e, task)}
+            draggable={!showComments}
+            onDragStart={(e) => {
+                if (showComments || (e.target as HTMLElement).closest('textarea, input, button')) {
+                    e.preventDefault();
+                    return;
+                }
+                onDragStart(e, task);
+            }}
             onDragEnd={onDragEnd}
-            className={`group bg-white rounded-xl border border-gray-200 p-4 shadow-xs hover:shadow-md transition-all duration-200 select-none cursor-grab active:cursor-grabbing ${
+            className={`group bg-white rounded-xl border border-gray-200 p-4 shadow-xs hover:shadow-md transition-all duration-200 select-none ${
+                showComments ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'
+            } ${
                 isDragging ? 'opacity-40 scale-95 border-dashed border-blue-400 shadow-none' : ''
             }`}
         >
@@ -291,7 +299,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 <div
                     onClick={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
-                    className="mb-3 p-2.5 bg-gray-50/90 rounded-xl border border-gray-200/80 shadow-2xs transition-all"
+                    className="mb-3 p-2.5 bg-gray-50/90 rounded-xl border border-gray-200/80 shadow-2xs transition-all select-text cursor-default"
                 >
                     <TaskComments
                         taskId={task._id}

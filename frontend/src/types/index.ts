@@ -21,12 +21,20 @@ export interface Note {
     createdAt: string;
 }
 
+// Reaction types
+export interface Reaction {
+    emoji: string;
+    userId: string;
+    userName?: string;
+}
+
 // Comment types
 export interface Comment {
     _id: string;
     text: string;
     user?: string;
     userName?: string;
+    reactions?: Reaction[];
     createdAt: string;
 }
 

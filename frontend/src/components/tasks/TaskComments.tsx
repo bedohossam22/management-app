@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { Comment, Note } from '../../types';
+import React, { useState, useEffect } from 'react';
+import type { Comment, Note, Reaction } from '../../types';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,48 @@ interface TaskCommentsProps {
     compact?: boolean;
     autoFocus?: boolean;
 }
+
+export const AVAILABLE_REACTIONS = [
+    { emoji: '👍', name: 'like', label: 'Like' },
+    { emoji: '👎', name: 'hate', label: 'Hate / Dislike' },
+    { emoji: '❤️', name: 'heart', label: 'Heart' },
+    { emoji: '🔥', name: 'fire', label: 'Fire' },
+    { emoji: '😂', name: 'laugh', label: 'Laugh' },
+    { emoji: '🚀', name: 'rocket', label: 'Rocket' },
+    { emoji: '🎉', name: 'party', label: 'Celebrate' },
+];
+
+interface GroupedReaction {
+    emoji: string;
+    count: number;
+    hasReacted: boolean;
+    userNames: string[];
+}
+
+const groupCommentReactions = (
+    reactions: Reaction[] = [],
+    currentUserId?: string
+): GroupedReaction[] => {
+    const map = new Map<string, GroupedReaction>();
+    for (const r of reactions) {
+        if (!r.emoji) continue;
+        const existing = map.get(r.emoji) || {
+            emoji: r.emoji,
+            count: 0,
+            hasReacted: false,
+            userNames: [],
+        };
+        existing.count += 1;
+        if (currentUserId && r.userId === currentUserId) {
+            existing.hasReacted = true;
+        }
+        if (r.userName) {
+            existing.userNames.push(currentUserId && r.userId === currentUserId ? 'You' : r.userName);
+        }
+        map.set(r.emoji, existing);
+    }
+    return Array.from(map.values());
+};
 
 const getAvatarColor = (name: string) => {
     const colors = [
@@ -96,6 +138,16 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [activePickerCommentId, setActivePickerCommentId] = useState<string | null>(null);
+
+    // Close reaction popover on outside click
+    useEffect(() => {
+        const handleClickOutside = () => setActivePickerCommentId(null);
+        if (activePickerCommentId) {
+            window.addEventListener('click', handleClickOutside);
+            return () => window.removeEventListener('click', handleClickOutside);
+        }
+    }, [activePickerCommentId]);
 
     // Normalize comments: if comments array is empty, fallback to notes
     const activeComments: Comment[] =
@@ -105,6 +157,7 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
                   _id: n._id,
                   text: n.content,
                   userName: 'Note',
+                  reactions: [],
                   createdAt: n.createdAt,
               }));
 
@@ -127,6 +180,7 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
                     text: contentToSend,
                     userName: user?.name || 'You',
                     user: user?.id,
+                    reactions: [],
                     createdAt: new Date().toISOString(),
                 };
                 onCommentsUpdate([...activeComments, mockComment]);
@@ -156,6 +210,59 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
             toast.error(err.response?.data?.message || 'Failed to delete comment');
         } finally {
             setDeletingId(null);
+        }
+    };
+
+    const handleToggleReaction = async (commentId: string, emoji: string) => {
+        if (!user) {
+            toast.error('Please log in to react');
+            return;
+        }
+
+        const userId = user.id;
+        const userName = user.name || 'You';
+        const previousComments = [...activeComments];
+
+        // Optimistically toggle reaction locally
+        const updated = activeComments.map((comment) => {
+            if (comment._id !== commentId) return comment;
+            const currentReactions = comment.reactions || [];
+            const alreadyReacted = currentReactions.some(
+                (r) => r.emoji === emoji && r.userId === userId
+            );
+
+            let newReactions: Reaction[];
+            if (alreadyReacted) {
+                newReactions = currentReactions.filter(
+                    (r) => !(r.emoji === emoji && r.userId === userId)
+                );
+            } else {
+                newReactions = [
+                    ...currentReactions,
+                    { emoji, userId, userName },
+                ];
+            }
+
+            return {
+                ...comment,
+                reactions: newReactions,
+            };
+        });
+
+        onCommentsUpdate(updated);
+
+        try {
+            const response = await api.post(
+                `/tasks/${taskId}/comments/${commentId}/reactions`,
+                { emoji }
+            );
+            const updatedTask = response.data.data || response.data;
+            if (updatedTask?.comments) {
+                onCommentsUpdate(updatedTask.comments);
+            }
+        } catch (err: any) {
+            onCommentsUpdate(previousComments);
+            toast.error(err.response?.data?.message || 'Failed to update reaction');
         }
     };
 
@@ -210,11 +317,11 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
                 </div>
             )}
 
-            {/* Comments Thread */}
+            {/* Comments / Posts Thread */}
             {activeComments.length > 0 ? (
                 <div
                     className={`space-y-2 overflow-y-auto pr-1 ${
-                        compact ? 'max-h-44' : 'max-h-64'
+                        compact ? 'max-h-48' : 'max-h-72'
                     }`}
                     style={{ scrollbarWidth: 'thin' }}
                 >
@@ -224,6 +331,7 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
                             user &&
                             (comment.user === user.id ||
                                 authorName.toLowerCase() === user.name.toLowerCase());
+                        const grouped = groupCommentReactions(comment.reactions, user?.id);
 
                         return (
                             <div
@@ -263,36 +371,162 @@ const TaskComments: React.FC<TaskCommentsProps> = ({
                                         </div>
                                     </div>
 
-                                    {/* Delete button */}
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteComment(comment._id);
-                                        }}
-                                        disabled={deletingId === comment._id}
-                                        className="opacity-0 group-hover/comment:opacity-100 text-gray-400 hover:text-rose-600 hover:bg-rose-50 p-1 rounded transition-all cursor-pointer"
-                                        title="Delete comment"
-                                    >
-                                        <svg
-                                            className="w-3.5 h-3.5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                            />
-                                        </svg>
-                                    </button>
+                                    {/* Action buttons (Quick Reactions & Delete) */}
+                                    <div className="flex items-center gap-1">
+                                        {/* Quick reactions bar visible on hover */}
+                                        <div className="opacity-0 group-hover/comment:opacity-100 transition-opacity duration-150 flex items-center bg-white shadow-2xs border border-gray-200 rounded-full px-1.5 py-0.5 gap-0.5">
+                                            {AVAILABLE_REACTIONS.slice(0, 3).map((r) => {
+                                                const hasReacted = (comment.reactions || []).some(
+                                                    (cr) => cr.emoji === r.emoji && cr.userId === user?.id
+                                                );
+                                                return (
+                                                    <button
+                                                        key={r.emoji}
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleToggleReaction(comment._id, r.emoji);
+                                                        }}
+                                                        title={`React with ${r.label}`}
+                                                        className={`p-0.5 hover:scale-125 transition-transform text-xs rounded cursor-pointer ${
+                                                            hasReacted ? 'scale-110 font-bold bg-blue-50' : ''
+                                                        }`}
+                                                    >
+                                                        {r.emoji}
+                                                    </button>
+                                                );
+                                            })}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActivePickerCommentId(
+                                                        activePickerCommentId === comment._id ? null : comment._id
+                                                    );
+                                                }}
+                                                className="p-0.5 hover:scale-110 text-gray-400 hover:text-gray-700 text-[10px] rounded cursor-pointer"
+                                                title="More reaction icons"
+                                            >
+                                                ➕
+                                            </button>
+                                        </div>
+
+                                        {/* Delete button */}
+                                        {isAuthor && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteComment(comment._id);
+                                                }}
+                                                disabled={deletingId === comment._id}
+                                                className="opacity-0 group-hover/comment:opacity-100 text-gray-400 hover:text-rose-600 hover:bg-rose-50 p-1 rounded transition-all cursor-pointer"
+                                                title="Delete comment"
+                                            >
+                                                <svg
+                                                    className="w-3.5 h-3.5"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <p className="mt-1.5 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap break-words pl-7">
                                     {comment.text}
                                 </p>
+
+                                {/* Reactions List & Add Reaction Bar */}
+                                <div className="mt-2 pl-7 flex flex-wrap items-center gap-1.5 relative">
+                                    {/* Existing Reaction Badges */}
+                                    {grouped.map((grp) => (
+                                        <button
+                                            key={grp.emoji}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleToggleReaction(comment._id, grp.emoji);
+                                            }}
+                                            title={`${grp.userNames.join(', ')} (${grp.emoji})`}
+                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs transition-all duration-150 cursor-pointer border select-none ${
+                                                grp.hasReacted
+                                                    ? 'bg-blue-100/90 text-blue-800 border-blue-300 font-bold shadow-2xs scale-102 hover:bg-blue-200/80'
+                                                    : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200/90 hover:border-gray-300'
+                                            } active:scale-95`}
+                                        >
+                                            <span className="text-xs leading-none">{grp.emoji}</span>
+                                            <span className="text-[11px] leading-none font-bold text-gray-700">
+                                                {grp.count}
+                                            </span>
+                                        </button>
+                                    ))}
+
+                                    {/* Add Reaction Button (+ smiley icon) */}
+                                    <div className="relative inline-block">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActivePickerCommentId(
+                                                    activePickerCommentId === comment._id ? null : comment._id
+                                                );
+                                            }}
+                                            title="Add reaction icon (like, hate, heart, fire...)"
+                                            className={`inline-flex items-center justify-center px-1.5 py-0.5 rounded-lg text-xs transition-colors cursor-pointer border ${
+                                                activePickerCommentId === comment._id
+                                                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                                                    : 'bg-white/80 hover:bg-gray-100 text-gray-400 hover:text-gray-700 border-gray-200/70 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            <span className="text-[11px] font-semibold text-gray-500 hover:text-gray-700 flex items-center gap-0.5">
+                                                <span>😀</span>
+                                                <span className="text-[10px] text-gray-400 font-bold">+</span>
+                                            </span>
+                                        </button>
+
+                                        {/* Popover Reaction Picker */}
+                                        {activePickerCommentId === comment._id && (
+                                            <div
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="absolute left-0 bottom-full mb-1.5 z-30 flex items-center gap-1 p-1.5 bg-white rounded-2xl shadow-xl border border-gray-200 animate-fade-in"
+                                            >
+                                                {AVAILABLE_REACTIONS.map((r) => {
+                                                    const isSelected = (comment.reactions || []).some(
+                                                        (cr) => cr.emoji === r.emoji && cr.userId === user?.id
+                                                    );
+                                                    return (
+                                                        <button
+                                                            key={r.emoji}
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleReaction(comment._id, r.emoji);
+                                                                setActivePickerCommentId(null);
+                                                            }}
+                                                            title={r.label}
+                                                            className={`p-1.5 rounded-xl hover:scale-130 transition-transform text-sm cursor-pointer ${
+                                                                isSelected
+                                                                    ? 'bg-blue-100 ring-1 ring-blue-400'
+                                                                    : 'hover:bg-gray-100'
+                                                            }`}
+                                                        >
+                                                            {r.emoji}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         );
                     })}

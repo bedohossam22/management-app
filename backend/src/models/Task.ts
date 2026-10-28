@@ -7,12 +7,20 @@ export interface INote {
     createdAt?: Date;
 }
 
+// Define reaction interface
+export interface IReaction {
+    emoji: string;
+    userId: mongoose.Types.ObjectId;
+    userName?: string;
+}
+
 // Define comment interface
 export interface IComment {
     _id?: mongoose.Types.ObjectId;
     text: string;
     user?: mongoose.Types.ObjectId;
     userName?: string;
+    reactions?: IReaction[];
     createdAt?: Date;
 }
 
@@ -68,6 +76,28 @@ const noteSchema = new Schema(
     { _id: true, timestamps: { createdAt: true, updatedAt: false } }
 );
 
+// Reaction Schema
+const reactionSchema = new Schema(
+    {
+        emoji: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        userName: {
+            type: String,
+            trim: true,
+            default: 'User',
+        },
+    },
+    { _id: false }
+);
+
 // Comment Schema
 const commentSchema = new Schema(
     {
@@ -85,6 +115,10 @@ const commentSchema = new Schema(
             type: String,
             trim: true,
             default: 'Anonymous',
+        },
+        reactions: {
+            type: [reactionSchema],
+            default: [],
         },
     },
     { _id: true, timestamps: { createdAt: true, updatedAt: false } }

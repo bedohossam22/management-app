@@ -27,8 +27,8 @@ export const getTasks = async (req: Request, res: Response) => {
         // filter by due date
         if (dueDate && typeof dueDate === 'string' && dueDate !== "All") {
             const now = new Date();
-            const startoftoday = new Date(now.getFullYear(), now.getMonth(), now.getSeconds(), 0, 0, 0, 0);
-            const endofday = new Date(now.getFullYear(), now.getMonth(), now.getSeconds(), 23, 59, 59, 999);
+            const startoftoday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            const endofday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
             const filterVal = dueDate.toLowerCase();
             if (filterVal === 'overdue') {
                 query.dueDate = { $lt: startoftoday };
@@ -491,6 +491,87 @@ export const deleteComment = async (req: Request, res: Response) => {
         res.status(500).json({
             success: false,
             message: 'Error deleting comment',
+        });
+    }
+};
+
+// Toggle Reaction on Comment
+export const toggleCommentReaction = async (req: Request, res: Response) => {
+    try {
+        const { id, commentId } = req.params;
+        const { emoji } = req.body;
+
+        if (!emoji || typeof emoji !== 'string' || !emoji.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Reaction emoji is required',
+            });
+        }
+
+        const task = await Task.findOne({
+            _id: id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        const comment = (task.comments || []).find(
+            (c: any) => c._id?.toString() === commentId
+        );
+
+        if (!comment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Comment not found',
+            });
+        }
+
+        if (!comment.reactions) {
+            comment.reactions = [] as any;
+        }
+
+        const reactions: any[] = comment.reactions as any[];
+        const targetEmoji = emoji.trim();
+        const userIdStr = req.user._id.toString();
+        const existingIndex = reactions.findIndex(
+            (r: any) => r.emoji === targetEmoji && r.userId?.toString() === userIdStr
+        );
+
+        if (existingIndex > -1) {
+            // Already reacted with this emoji -> toggle off
+            reactions.splice(existingIndex, 1);
+        } else {
+            // Add reaction
+            reactions.push({
+                emoji: targetEmoji,
+                userId: req.user._id,
+                userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+            });
+        }
+
+        await task.save();
+
+        res.json({
+            success: true,
+            message: 'Reaction updated successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task or comment not found',
+            });
+        }
+        console.error('Toggle comment reaction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating reaction',
         });
     }
 };
