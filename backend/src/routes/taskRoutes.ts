@@ -11,6 +11,7 @@ import {
     addComment,
     deleteComment,
     toggleCommentReaction,
+    toggleTaskReaction,
 } from '../controllers/taskController';
 import { createTaskValidation, updateTaskValidation } from '../validators/taskValidator';
 import { auth } from '../middleware/auth';
@@ -35,5 +36,6 @@ router.delete('/:id/notes/:noteId', deleteNote);
 router.post('/:id/comments', addComment);
 router.delete('/:id/comments/:commentId', deleteComment);
 router.post('/:id/comments/:commentId/reactions', toggleCommentReaction);
+router.post('/:id/reactions', toggleTaskReaction);
 
 export default router;

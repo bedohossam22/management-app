@@ -574,4 +574,75 @@ export const toggleCommentReaction = async (req: Request, res: Response) => {
             message: 'Error updating reaction',
         });
     }
-};
+};
+
+
+// Toggle Reaction on Task / Post
+export const toggleTaskReaction = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { emoji } = req.body;
+
+        if (!emoji || typeof emoji !== 'string' || !emoji.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Reaction emoji is required',
+            });
+        }
+
+        const task = await Task.findOne({
+            _id: id,
+            user: req.user._id,
+        });
+
+        if (!task) {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+
+        if (!task.reactions) {
+            task.reactions = [];
+        }
+
+        const targetEmoji = emoji.trim();
+        const userIdStr = req.user._id.toString();
+        const existingIndex = task.reactions.findIndex(
+            (r: any) => r.emoji === targetEmoji && r.userId?.toString() === userIdStr
+        );
+
+        if (existingIndex > -1) {
+            // Already reacted with this emoji -> toggle off
+            task.reactions.splice(existingIndex, 1);
+        } else {
+            // Add reaction
+            task.reactions.push({
+                emoji: targetEmoji,
+                userId: req.user._id,
+                userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+            });
+        }
+
+        task.markModified('reactions');
+        await task.save();
+
+        res.json({
+            success: true,
+            message: 'Task reaction updated successfully',
+            data: task,
+        });
+    } catch (error: any) {
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({
+                success: false,
+                message: 'Task not found',
+            });
+        }
+        console.error('Toggle task reaction error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating task reaction',
+        });
+    }
+};
