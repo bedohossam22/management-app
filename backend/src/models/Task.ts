@@ -41,6 +41,7 @@ export interface ITask extends Document {
     subtasks: ISubtask[];
     notes: INote[];
     comments: IComment[];
+    reactions: IReaction[];
     user: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
@@ -162,6 +163,10 @@ const taskSchema = new Schema<ITask>(
         },
         comments: {
             type: [commentSchema],
+            default: [],
+        },
+        reactions: {
+            type: [reactionSchema],
             default: [],
         },
         user: {
