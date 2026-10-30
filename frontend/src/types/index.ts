@@ -3,6 +3,7 @@ export interface User {
     id: string;
     name: string;
     email: string;
+    avatar?: string;
     token: string;
 }
 
@@ -32,8 +33,10 @@ export interface Reaction {
 export interface Comment {
     _id: string;
     text: string;
+    image?: string;
     user?: string;
     userName?: string;
+    userAvatar?: string;
     reactions?: Reaction[];
     createdAt: string;
 }
@@ -49,6 +52,7 @@ export interface Task {
     subtasks?: Subtask[];
     notes?: Note[];
     comments?: Comment[];
+    reactions?: Reaction[];
     user: string;
     createdAt: string;
     updatedAt: string;
@@ -62,6 +66,7 @@ export interface AuthContextType {
     register: (userData: RegisterData) => Promise<{ success: boolean; error?: string }>;
     login: (credentials: LoginData) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
+    updateUserAvatar: (avatar: string) => Promise<{ success: boolean; error?: string }>;
     isAuthenticated: boolean;
 }
 
@@ -69,6 +74,7 @@ export interface RegisterData {
     name: string;
     email: string;
     password: string;
+    avatar?: string;
 }
 
 export interface LoginData {

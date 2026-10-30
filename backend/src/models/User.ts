@@ -1,17 +1,16 @@
 import mongoose, { Schema, Document } from "mongoose";
 import bcrypt from 'bcryptjs';
 
-// Dfine interface
-
+// Define interface
 export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
+    avatar?: string;
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-
-//User Schema
+// User Schema
 const userSchema = new Schema<IUser>(
     {
         name: {
@@ -34,6 +33,10 @@ const userSchema = new Schema<IUser>(
             required: [true, 'Password is required'],
             minlength: [6, 'Password must be at least 6 characters'],
         },
+        avatar: {
+            type: String,
+            default: '👤',
+        },
     },
     {
         timestamps: true,
@@ -48,12 +51,10 @@ userSchema.pre('save', async function (next) {
     next();
 });
 
-
 userSchema.methods.comparePassword = async function (
     candidatePassword: string
 ): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
 };
-
 
 export const User = mongoose.model<IUser>('User', userSchema);

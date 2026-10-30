@@ -10,7 +10,6 @@ const generateToken = (id: string): string => {
     });
 };
 
-
 export const register = async (req: Request, res: Response) => {
     try {
         const errors = validationResult(req);
@@ -23,7 +22,7 @@ export const register = async (req: Request, res: Response) => {
             });
         }
 
-        const { name, email, password } = req.body;
+        const { name, email, password, avatar } = req.body;
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -34,8 +33,13 @@ export const register = async (req: Request, res: Response) => {
             });
         }
 
-        // Create user
-        const user = await User.create({ name, email, password });
+        // Create user with avatar if provided
+        const user = await User.create({
+            name,
+            email,
+            password,
+            avatar: avatar && typeof avatar === 'string' && avatar.trim() ? avatar.trim() : '👤',
+        });
 
         // Generate token
         const token = generateToken(user._id.toString());
@@ -47,6 +51,7 @@ export const register = async (req: Request, res: Response) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                avatar: user.avatar || '👤',
                 token,
             },
         });
@@ -58,7 +63,6 @@ export const register = async (req: Request, res: Response) => {
         });
     }
 };
-
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -102,6 +106,7 @@ export const login = async (req: Request, res: Response) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                avatar: user.avatar || '👤',
                 token,
             },
         });
@@ -110,6 +115,75 @@ export const login = async (req: Request, res: Response) => {
         res.status(500).json({
             success: false,
             message: 'Server error during login',
+        });
+    }
+};
+
+// Get current user profile
+export const getMe = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+        res.json({
+            success: true,
+            data: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar || '👤',
+            },
+        });
+    } catch (error) {
+        console.error('getMe error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error retrieving user',
+        });
+    }
+};
+
+// Update User Avatar (preset icon or uploaded image)
+export const updateAvatar = async (req: Request, res: Response) => {
+    try {
+        const { avatar } = req.body;
+        if (!avatar || typeof avatar !== 'string' || !avatar.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Avatar is required',
+            });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        user.avatar = avatar.trim();
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Avatar updated successfully',
+            data: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+            },
+        });
+    } catch (error) {
+        console.error('Update avatar error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error updating avatar',
         });
     }
 };

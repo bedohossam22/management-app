@@ -2,8 +2,6 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { Task } from '../models/Task';
 
-
-
 export const getTasks = async (req: Request, res: Response) => {
     try {
         const { status, priority, search, dueDate } = req.query;
@@ -33,12 +31,12 @@ export const getTasks = async (req: Request, res: Response) => {
             if (filterVal === 'overdue') {
                 query.dueDate = { $lt: startoftoday };
                 if (!query.status) {
-                    query.status = { $ne: 'Done' }
+                    query.status = { $ne: 'Done' };
                 }
             } else if (filterVal === 'today') {
-                query.dueDate = { $gte: startoftoday, $lt: endofday }
+                query.dueDate = { $gte: startoftoday, $lt: endofday };
             } else if (filterVal === 'upcoming') {
-                query.dueDate = { $gt: endofday }
+                query.dueDate = { $gt: endofday };
             } else {
                 const dateVal = new Date(dueDate);
                 if (!isNaN(dateVal.getTime())) {
@@ -48,7 +46,6 @@ export const getTasks = async (req: Request, res: Response) => {
                 }
             }
         }
-
 
         const tasks = await Task.find(query).sort({ createdAt: -1 });
 
@@ -65,8 +62,6 @@ export const getTasks = async (req: Request, res: Response) => {
         });
     }
 };
-
-
 
 export const getTaskById = async (req: Request, res: Response) => {
     try {
@@ -100,7 +95,6 @@ export const getTaskById = async (req: Request, res: Response) => {
     }
 };
 
-
 export const createTask = async (req: Request, res: Response) => {
     try {
         const errors = validationResult(req);
@@ -110,7 +104,7 @@ export const createTask = async (req: Request, res: Response) => {
                 errors: errors.array(),
             });
         }
-        //Create Task
+        // Create Task
         const { title, description, status, priority, dueDate, subtasks } = req.body;
 
         const task = await Task.create({
@@ -136,7 +130,6 @@ export const createTask = async (req: Request, res: Response) => {
         });
     }
 };
-
 
 // Update Task
 export const updateTask = async (req: Request, res: Response) => {
@@ -242,7 +235,6 @@ export const toggleSubtask = async (req: Request, res: Response) => {
 };
 
 // Delete Task
-
 export const deleteTask = async (req: Request, res: Response) => {
     try {
         const task = await Task.findOneAndDelete({
@@ -383,266 +375,269 @@ export const deleteNote = async (req: Request, res: Response) => {
 // Add Comment to Task
 export const addComment = async (req: Request, res: Response) => {
     try {
-        const { text, content } = req.body;
+        const { text, content, image } = req.body;
         const commentText = (typeof text === 'string' ? text : typeof content === 'string' ? content : '').trim();
+        const commentImage = typeof image === 'string' ? image.trim() : '';
 
-        if (!commentText) {
-            return res.status(400).json({
-                success: false,
-                message: 'Comment text is required',
+            if (!commentText && !commentImage) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Comment text or image is required',
+                });
+            }
+
+            if (commentText.length > 1000) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Comment cannot exceed 1000 characters',
+                });
+            }
+
+            const task = await Task.findOne({
+                _id: req.params.id,
+                user: req.user._id,
             });
-        }
 
-        if (commentText.length > 1000) {
-            return res.status(400).json({
-                success: false,
-                message: 'Comment cannot exceed 1000 characters',
-            });
-        }
+            if (!task) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
 
-        const task = await Task.findOne({
-            _id: req.params.id,
-            user: req.user._id,
-        });
+            if (!task.comments) {
+                task.comments = [] as any;
+            }
 
-        if (!task) {
-            return res.status(404).json({
-                success: false,
-                message: 'Task not found',
-            });
-        }
-
-        if (!task.comments) {
-            task.comments = [] as any;
-        }
-
-        const newComment = {
-            text: commentText,
-            user: req.user._id,
-            userName: req.user.name || req.user.email?.split('@')[0] || 'User',
-        };
-
-        task.comments.push(newComment as any);
-        await task.save();
-
-        res.status(201).json({
-            success: true,
-            message: 'Comment added successfully',
-            data: task,
-        });
-    } catch (error: any) {
-        if (error.kind === 'ObjectId') {
-            return res.status(404).json({
-                success: false,
-                message: 'Task not found',
-            });
-        }
-        console.error('Add comment error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error adding comment',
-        });
-    }
-};
-
-// Delete Comment from Task
-export const deleteComment = async (req: Request, res: Response) => {
-    try {
-        const { id, commentId } = req.params;
-        const task = await Task.findOne({
-            _id: id,
-            user: req.user._id,
-        });
-
-        if (!task) {
-            return res.status(404).json({
-                success: false,
-                message: 'Task not found',
-            });
-        }
-
-        const commentIndex = (task.comments || []).findIndex(
-            (c: any) => c._id?.toString() === commentId
-        );
-
-        if (commentIndex === -1) {
-            return res.status(404).json({
-                success: false,
-                message: 'Comment not found',
-            });
-        }
-
-        task.comments.splice(commentIndex, 1);
-        await task.save();
-
-        res.json({
-            success: true,
-            message: 'Comment deleted successfully',
-            data: task,
-        });
-    } catch (error: any) {
-        if (error.kind === 'ObjectId') {
-            return res.status(404).json({
-                success: false,
-                message: 'Task not found',
-            });
-        }
-        console.error('Delete comment error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error deleting comment',
-        });
-    }
-};
-
-// Toggle Reaction on Comment
-export const toggleCommentReaction = async (req: Request, res: Response) => {
-    try {
-        const { id, commentId } = req.params;
-        const { emoji } = req.body;
-
-        if (!emoji || typeof emoji !== 'string' || !emoji.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Reaction emoji is required',
-            });
-        }
-
-        const task = await Task.findOne({
-            _id: id,
-            user: req.user._id,
-        });
-
-        if (!task) {
-            return res.status(404).json({
-                success: false,
-                message: 'Task not found',
-            });
-        }
-
-        const comment = (task.comments || []).find(
-            (c: any) => c._id?.toString() === commentId
-        );
-
-        if (!comment) {
-            return res.status(404).json({
-                success: false,
-                message: 'Comment not found',
-            });
-        }
-
-        if (!comment.reactions) {
-            comment.reactions = [] as any;
-        }
-
-        const reactions: any[] = comment.reactions as any[];
-        const targetEmoji = emoji.trim();
-        const userIdStr = req.user._id.toString();
-        const existingIndex = reactions.findIndex(
-            (r: any) => r.emoji === targetEmoji && r.userId?.toString() === userIdStr
-        );
-
-        if (existingIndex > -1) {
-            // Already reacted with this emoji -> toggle off
-            reactions.splice(existingIndex, 1);
-        } else {
-            // Add reaction
-            reactions.push({
-                emoji: targetEmoji,
-                userId: req.user._id,
+            const newComment = {
+                text: commentText,
+                image: commentImage,
+                user: req.user._id,
                 userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+                userAvatar: req.user.avatar || '👤',
+            };
+
+            task.comments.push(newComment as any);
+            await task.save();
+
+            res.status(201).json({
+                success: true,
+                message: 'Comment added successfully',
+                data: task,
             });
-        }
-
-        await task.save();
-
-        res.json({
-            success: true,
-            message: 'Reaction updated successfully',
-            data: task,
-        });
-    } catch (error: any) {
-        if (error.kind === 'ObjectId') {
-            return res.status(404).json({
+        } catch (error: any) {
+            if (error.kind === 'ObjectId') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
+            console.error('Add comment error:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Task or comment not found',
+                message: 'Error adding comment',
             });
         }
-        console.error('Toggle comment reaction error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating reaction',
-        });
-    }
-};
+    };
 
+    // Delete Comment from Task
+    export const deleteComment = async (req: Request, res: Response) => {
+        try {
+            const { id, commentId } = req.params;
+            const task = await Task.findOne({
+                _id: id,
+                user: req.user._id,
+            });
 
-// Toggle Reaction on Task / Post
-export const toggleTaskReaction = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { emoji } = req.body;
+            if (!task) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
 
-        if (!emoji || typeof emoji !== 'string' || !emoji.trim()) {
-            return res.status(400).json({
+            const commentIndex = (task.comments || []).findIndex(
+                (c: any) => c._id?.toString() === commentId
+            );
+
+            if (commentIndex === -1) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Comment not found',
+                });
+            }
+
+            task.comments.splice(commentIndex, 1);
+            await task.save();
+
+            res.json({
+                success: true,
+                message: 'Comment deleted successfully',
+                data: task,
+            });
+        } catch (error: any) {
+            if (error.kind === 'ObjectId') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
+            console.error('Delete comment error:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Reaction emoji is required',
+                message: 'Error deleting comment',
             });
         }
+    };
 
-        const task = await Task.findOne({
-            _id: id,
-            user: req.user._id,
-        });
+    // Toggle Reaction on Comment
+    export const toggleCommentReaction = async (req: Request, res: Response) => {
+        try {
+            const { id, commentId } = req.params;
+            const { emoji } = req.body;
 
-        if (!task) {
-            return res.status(404).json({
+            if (!emoji || typeof emoji !== 'string' || !emoji.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Reaction emoji is required',
+                });
+            }
+
+            const task = await Task.findOne({
+                _id: id,
+                user: req.user._id,
+            });
+
+            if (!task) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
+
+            const comment = (task.comments || []).find(
+                (c: any) => c._id?.toString() === commentId
+            );
+
+            if (!comment) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Comment not found',
+                });
+            }
+
+            if (!comment.reactions) {
+                comment.reactions = [] as any;
+            }
+
+            const reactions: any[] = comment.reactions as any[];
+            const targetEmoji = emoji.trim();
+            const userIdStr = req.user._id.toString();
+            const existingIndex = reactions.findIndex(
+                (r: any) => r.emoji === targetEmoji && r.userId?.toString() === userIdStr
+            );
+
+            if (existingIndex > -1) {
+                // Already reacted with this emoji -> toggle off
+                reactions.splice(existingIndex, 1);
+            } else {
+                // Add reaction
+                reactions.push({
+                    emoji: targetEmoji,
+                    userId: req.user._id,
+                    userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+                });
+            }
+
+            task.markModified('comments');
+            await task.save();
+
+            res.json({
+                success: true,
+                message: 'Reaction updated successfully',
+                data: task,
+            });
+        } catch (error: any) {
+            if (error.kind === 'ObjectId') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task or comment not found',
+                });
+            }
+            console.error('Toggle comment reaction error:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Task not found',
+                message: 'Error updating reaction',
             });
         }
+    };
 
-        if (!task.reactions) {
-            task.reactions = [];
-        }
+    // Toggle Reaction on Task / Post
+    export const toggleTaskReaction = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            const { emoji } = req.body;
 
-        const targetEmoji = emoji.trim();
-        const userIdStr = req.user._id.toString();
-        const existingIndex = task.reactions.findIndex(
-            (r: any) => r.emoji === targetEmoji && r.userId?.toString() === userIdStr
-        );
+            if (!emoji || typeof emoji !== 'string' || !emoji.trim()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Reaction emoji is required',
+                });
+            }
 
-        if (existingIndex > -1) {
-            // Already reacted with this emoji -> toggle off
-            task.reactions.splice(existingIndex, 1);
-        } else {
-            // Add reaction
-            task.reactions.push({
-                emoji: targetEmoji,
-                userId: req.user._id,
-                userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+            const task = await Task.findOne({
+                _id: id,
+                user: req.user._id,
             });
-        }
 
-        task.markModified('reactions');
-        await task.save();
+            if (!task) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
 
-        res.json({
-            success: true,
-            message: 'Task reaction updated successfully',
-            data: task,
-        });
-    } catch (error: any) {
-        if (error.kind === 'ObjectId') {
-            return res.status(404).json({
+            if (!task.reactions) {
+                task.reactions = [];
+            }
+
+            const targetEmoji = emoji.trim();
+            const userIdStr = req.user._id.toString();
+            const existingIndex = task.reactions.findIndex(
+                (r: any) => r.emoji === targetEmoji && r.userId?.toString() === userIdStr
+            );
+
+            if (existingIndex > -1) {
+                // Already reacted with this emoji -> toggle off
+                task.reactions.splice(existingIndex, 1);
+            } else {
+                // Add reaction
+                task.reactions.push({
+                    emoji: targetEmoji,
+                    userId: req.user._id,
+                    userName: req.user.name || req.user.email?.split('@')[0] || 'User',
+                });
+            }
+
+            task.markModified('reactions');
+            await task.save();
+
+            res.json({
+                success: true,
+                message: 'Task reaction updated successfully',
+                data: task,
+            });
+        } catch (error: any) {
+            if (error.kind === 'ObjectId') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Task not found',
+                });
+            }
+            console.error('Toggle task reaction error:', error);
+            res.status(500).json({
                 success: false,
-                message: 'Task not found',
+                message: 'Error updating task reaction',
             });
         }
-        console.error('Toggle task reaction error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating task reaction',
-        });
-    }
-};
+    };

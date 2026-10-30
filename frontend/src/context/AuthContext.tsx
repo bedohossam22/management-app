@@ -16,7 +16,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (token && storedUser) {
             try {
-                setUser(JSON.parse(storedUser));
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                // Background refresh profile to sync avatar or other fields
+                api.get('/auth/me')
+                    .then((res) => {
+                        if (res.data?.data) {
+                            const updatedUser = {
+                                ...parsedUser,
+                                ...res.data.data,
+                                token,
+                            };
+                            setUser(updatedUser);
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                        }
+                    })
+                    .catch(() => {
+                        // ignore background sync error
+                    });
             } catch (e) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -76,6 +93,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
+    const updateUserAvatar = async (avatar: string) => {
+        try {
+            setError(null);
+            const response = await api.put('/auth/avatar', { avatar });
+            const { data } = response.data;
+
+            if (user) {
+                const updated = {
+                    ...user,
+                    avatar: data.avatar,
+                };
+                setUser(updated);
+                localStorage.setItem('user', JSON.stringify(updated));
+            }
+            toast.success('Avatar updated successfully!');
+            return { success: true };
+        } catch (err: any) {
+            const message = getErrorMessage(err, 'Failed to update avatar');
+            setError(message);
+            toast.error(message);
+            return { success: false, error: message };
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -89,6 +130,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         register,
         login,
         logout,
+        updateUserAvatar,
         isAuthenticated: !!user,
     };
 

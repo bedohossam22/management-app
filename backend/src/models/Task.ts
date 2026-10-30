@@ -18,8 +18,10 @@ export interface IReaction {
 export interface IComment {
     _id?: mongoose.Types.ObjectId;
     text: string;
+    image?: string;
     user?: mongoose.Types.ObjectId;
     userName?: string;
+    userAvatar?: string;
     reactions?: IReaction[];
     createdAt?: Date;
 }
@@ -108,6 +110,10 @@ const commentSchema = new Schema(
             trim: true,
             maxlength: [1000, 'Comment cannot exceed 1000 characters'],
         },
+        image: {
+            type: String,
+            default: '',
+        },
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
@@ -116,6 +122,10 @@ const commentSchema = new Schema(
             type: String,
             trim: true,
             default: 'Anonymous',
+        },
+        userAvatar: {
+            type: String,
+            default: '',
         },
         reactions: {
             type: [reactionSchema],
@@ -179,7 +189,6 @@ const taskSchema = new Schema<ITask>(
         timestamps: true,
     }
 );
-
 
 taskSchema.index({ title: 'text' });
 

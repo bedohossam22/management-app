@@ -5,12 +5,15 @@ import { useFocus } from '../../context/FocusContext';
 import CommandPalette from './CommandPalette';
 import ThemeToggle from './ThemeToggle';
 import CoffeeTriggerButton from '../coffee/CoffeeTriggerButton';
+import UserAvatar from './UserAvatar';
+import AvatarSelectModal from './AvatarSelectModal';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const { openFocusModal, isActive, timeLeft, mode } = useFocus();
     const navigate = useNavigate();
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
     // Global Cmd+K / Ctrl+K hotkey listener
     useEffect(() => {
@@ -58,10 +61,9 @@ const Navbar = () => {
                                     to="/"
                                     end
                                     className={({ isActive }) =>
-                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
-                                            isActive
-                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
-                                                : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
+                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${isActive
+                                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
+                                            : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
                                         }`
                                     }
                                 >
@@ -74,10 +76,9 @@ const Navbar = () => {
                                 <NavLink
                                     to="/calendar"
                                     className={({ isActive }) =>
-                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
-                                            isActive
-                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
-                                                : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
+                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${isActive
+                                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
+                                            : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
                                         }`
                                     }
                                 >
@@ -90,10 +91,9 @@ const Navbar = () => {
                                 <NavLink
                                     to="/analytics"
                                     className={({ isActive }) =>
-                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${
-                                            isActive
-                                                ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
-                                                : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
+                                        `px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1.5 ${isActive
+                                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold'
+                                            : 'text-gray-600 dark:text-stone-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-stone-800'
                                         }`
                                     }
                                 >
@@ -130,11 +130,10 @@ const Navbar = () => {
                             <button
                                 type="button"
                                 onClick={() => openFocusModal()}
-                                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border cursor-pointer ${
-                                    isActive
+                                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 border cursor-pointer ${isActive
                                         ? 'bg-orange-500 text-white border-orange-400 shadow-sm shadow-orange-500/25 animate-pulse'
                                         : 'bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 border-gray-200 dark:border-stone-700 hover:bg-orange-50/60 dark:hover:bg-stone-750'
-                                }`}
+                                    }`}
                                 title="Pomodoro Focus Timer (Press 'P')"
                             >
                                 <span className="text-sm">{mode === 'pomodoro' ? '🍅' : mode === 'shortBreak' ? '☕' : '🌴'}</span>
@@ -159,10 +158,26 @@ const Navbar = () => {
 
                             <ThemeToggle />
 
-                            <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-stone-300 bg-gray-50 dark:bg-stone-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-stone-700">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                                <span className="font-medium text-gray-800 dark:text-stone-200">{user?.name}</span>
-                            </div>
+                            {/* User Avatar & Name Button (Click to change avatar / upload photo) */}
+                            <button
+                                type="button"
+                                onClick={() => setIsAvatarModalOpen(true)}
+                                title="Click to customize avatar or upload image"
+                                className="flex items-center space-x-2 py-1 px-1.5 sm:px-2.5 rounded-xl bg-gray-50 dark:bg-stone-800 hover:bg-gray-100 dark:hover:bg-stone-750 border border-gray-200 dark:border-stone-700 transition-all cursor-pointer group"
+                            >
+                                <UserAvatar
+                                    avatar={user?.avatar}
+                                    name={user?.name}
+                                    size="sm"
+                                    className="group-hover:scale-105 transition-transform"
+                                />
+                                <span className="hidden sm:inline font-semibold text-xs text-gray-800 dark:text-stone-200 max-w-[100px] truncate">
+                                    {user?.name}
+                                </span>
+                                <span className="text-[10px] text-gray-400 group-hover:text-blue-600 transition-colors hidden md:inline">
+                                    ✏️
+                                </span>
+                            </button>
 
                             <button
                                 onClick={handleLogout}
@@ -181,6 +196,11 @@ const Navbar = () => {
             <CommandPalette
                 isOpen={isPaletteOpen}
                 onClose={() => setIsPaletteOpen(false)}
+            />
+
+            <AvatarSelectModal
+                isOpen={isAvatarModalOpen}
+                onClose={() => setIsAvatarModalOpen(false)}
             />
         </>
     );
